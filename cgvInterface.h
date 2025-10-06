@@ -13,6 +13,8 @@
 
 #include <string>
 #include "cgvScene3D.h"
+#include "cgvCamera.h"
+
 
 /**
 * Objects of this class encapsulate the interface and state of the application.
@@ -22,17 +24,24 @@ class cgvInterface
     // Attributes
     int window_width = 0; ///< Width of the display window
     int window_height = 0; ///< Height of the display window
+    int pos;
+    bool windowChange;
 
     cgvScene3D scene; ///< Scene to display in the window defined by cgvInterface
+    cgvCamera camera; // camera used to display the scene
 
     int menuSelection = 0; ///< Last selected menu item
 
+    // Panoramic view values
+    cgvPoint3D p0, r, V;
+
+
     // Implementing the Singleton pattern
     static cgvInterface* _instance; ///< Pointer to the singleton object of the class
-    cgvInterface();
 
 public:
     static cgvInterface& getInstance();
+    cgvInterface();
 
     /// Destroyer
     ~cgvInterface() = default;
@@ -65,6 +74,10 @@ public:
     void set_window_height(int _window_height);
 
     static void specialFunc(int key, int x, int y);
+
+    void create_world(void);
+
+    void update_camera_view(int pos);
 };
 
 #endif   // __IGVINTERFAZ

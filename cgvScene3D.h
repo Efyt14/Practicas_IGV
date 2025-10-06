@@ -90,6 +90,8 @@ public:
 
     void applyScaling(float factor);
 
+    void renderSceneContent(int scene);
+
 
 
 private:
@@ -100,6 +102,7 @@ private:
     void renderSceneC();
 
     void paint_axes();
+
 };
 
 #endif   // __IGVESCENA3D

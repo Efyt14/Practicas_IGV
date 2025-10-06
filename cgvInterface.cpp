@@ -2,7 +2,11 @@
 
 #include "cgvInterface.h"
 
-// Singleton Pattern Application
+cgvInterface interface;
+
+
+//NOTE REFACTORIZAR TODO LO QUE TENGA INSTANCE POR INTERFACE
+
 cgvInterface* cgvInterface::_instance = nullptr;
 
 // Constructor Methods -----------------------------------
@@ -10,8 +14,8 @@ cgvInterface* cgvInterface::_instance = nullptr;
 /**
 * Default constructor
 */
-cgvInterface::cgvInterface(): menuSelection(scene.SceneA)
-{}
+cgvInterface::cgvInterface(): menuSelection(scene.SceneA), pos(1), windowChange(false) {}
+
 
 // Public methods ----------------------------------------
 
@@ -63,6 +67,8 @@ void cgvInterface::configure_environment (int argc, char** argv
 
     glEnable( GL_LIGHTING ); // enable scene lighting
     glEnable( GL_NORMALIZE ); // normalize normal vectors for lighting calculations
+
+    create_world();// Añadido para la practica 2
 }
 
 /**
@@ -70,12 +76,12 @@ void cgvInterface::configure_environment (int argc, char** argv
 */
 void cgvInterface::create_menu ()
 { int menu_id = glutCreateMenu ( menuHandle );
-    glutAddMenuEntry ( _instance->scene.Scene_NameA
-            , _instance->scene.SceneA );
-    glutAddMenuEntry ( _instance->scene.Scene_NameB
-            , _instance->scene.SceneB );
-    glutAddMenuEntry ( _instance->scene.Scene_NameC
-            , _instance->scene.SceneC );
+    glutAddMenuEntry ( interface.scene.Scene_NameA
+            , interface.scene.SceneA );
+    glutAddMenuEntry ( interface.scene.Scene_NameB
+            , interface.scene.SceneB );
+    glutAddMenuEntry ( interface.scene.Scene_NameC
+            , interface.scene.SceneC );
 
     glutAttachMenu ( GLUT_RIGHT_BUTTON );
 }
@@ -105,74 +111,203 @@ void cgvInterface::keyboardFunc (unsigned char key, int x, int y) {
 
 
     switch ( key ) {
-        case 'e': case 'E':
-            _instance->scene.set_axes(!_instance->scene.get_axes());
+        case 'e':
+        case 'E':
+            interface.scene.set_axes(!interface.scene.get_axes());
             break;
 
 
         case '1': // select Scene A / object 0
-            _instance->menuSelection = _instance->scene.SceneA;
-            _instance->scene.selected = 0;
+            interface.menuSelection = interface.scene.SceneA;
+            interface.scene.selected = 0;
             break;
         case '2':
-            _instance->menuSelection = _instance->scene.SceneB;
-            _instance->scene.selected = 1;
+            interface.menuSelection = interface.scene.SceneB;
+            interface.scene.selected = 1;
             break;
         case '3':
-            _instance->menuSelection = _instance->scene.SceneC;
-            _instance->scene.selected = 2;
+            interface.menuSelection = interface.scene.SceneC;
+            interface.scene.selected = 2;
             break;
 
 
-        case 27: exit(1); break; // ESC
+        case 27:
+            exit(1);
+            break; // ESC
+
+            // Traslación en Y
+        case 'u':
+            interface.scene.applyTranslation(0.0f, TRANSL_STEP, 0.0f);
+            break;
+        case 'U':
+            interface.scene.applyTranslation(0.0f, -TRANSL_STEP, 0.0f);
+            break;
 
 
-    // Traslación en Y
-        case 'u': _instance->scene.applyTranslation(0.0f, TRANSL_STEP, 0.0f); break;
-        case 'U': _instance->scene.applyTranslation(0.0f, -TRANSL_STEP, 0.0f); break;
+            // Rotación
+        case 'x':
+            interface.scene.applyRotation(ROT_STEP, 0, 0);
+            break;
+        case 'X':
+            interface.scene.applyRotation(-ROT_STEP, 0, 0);
+            break;
+        case 'y':
+        case 'Y':
+            if (interface.camera.interactiveMode) {
+                //Practica 2
+                // Si el modo interactivo está activo, rota la cámara
+                interface.camera.rotateY((key == 'y') ? 0.05f : -0.05f);
+                interface.camera.apply();
+            } else {
+                // Si no, rota la escena como antes
+                if (key == 'y') interface.scene.applyRotation(0, ROT_STEP, 0);
+                else interface.scene.applyRotation(0, -ROT_STEP, 0);
+            }
+            break;
+        case 'z':
+            interface.scene.applyRotation(0, 0, ROT_STEP);
+            break;
+        case 'Z':
+            interface.scene.applyRotation(0, 0, -ROT_STEP);
+            break;
 
+            // Escalado
+        case 's':
+            interface.scene.applyScaling(SCALE_UP);
+            break;
+        case 'S':
+            interface.scene.applyScaling(SCALE_DOWN);
+            break;
 
-    // Rotación
-        case 'x': _instance->scene.applyRotation( ROT_STEP,0,0); break;
-        case 'X': _instance->scene.applyRotation(-ROT_STEP,0,0); break;
-        case 'y': _instance->scene.applyRotation(0, ROT_STEP,0); break;
-        case 'Y': _instance->scene.applyRotation(0,-ROT_STEP,0); break;
-        case 'z': _instance->scene.applyRotation(0,0, ROT_STEP); break;
-        case 'Z': _instance->scene.applyRotation(0,0,-ROT_STEP); break;
-
-
-    // Escalado
-        case 's': _instance->scene.applyScaling(SCALE_UP); break;
-        case 'S': _instance->scene.applyScaling(SCALE_DOWN); break;
-
-
-    // Cambio de modo
+            // Cambio de modo
         case 'm':
-            _instance->scene.deferredMode = false; // libre
+            interface.scene.deferredMode = false; // libre
             // Al cambiar a libre, si había acumuladas, ejecutarlas
-            for (auto &op : _instance->scene.ops[_instance->scene.selected]) {
+            for (auto &op: interface.scene.ops[interface.scene.selected]) {
                 op();
             }
-            _instance->scene.ops[_instance->scene.selected].clear();
+            interface.scene.ops[interface.scene.selected].clear();
             break;
 
         case 'M':
-            _instance->scene.deferredMode = true;  // diferido
+            interface.scene.deferredMode = true;  // diferido
+            break;
+
+            //Practica 2
+
+        case 'p': // change the projection type from parallel to perspective and vice versa
+        case 'P':
+            if (interface.camera.type == CGV_PARALLEL) { // Perspective mode
+                interface.camera.set(CGV_PERSPECTIVE,
+                                     interface.camera.P0,
+                                     interface.camera.r,
+                                     interface.camera.V,
+                                     interface.camera.angle,
+                                     interface.camera.aspect,
+                                     interface.camera.znear,
+                                     interface.camera.zfar
+                );
+            } else {
+                interface.camera.set(CGV_PARALLEL,
+                                     interface.camera.P0,
+                                     interface.camera.r,
+                                     interface.camera.V,
+                                     interface.camera.xwmin,
+                                     interface.camera.xwmax,
+                                     interface.camera.ywmin,
+                                     interface.camera.ywmax,
+                                     interface.camera.znear,
+                                     interface.camera.zfar
+                );
+            }
+            interface.camera.apply();
+            break;
+
+        case 'v': // Change the camera position to display plan, profile, elevation, or perspective views
+        case 'V':
+            // mantener interface.pos entre 0..3 y actualizar la cámara en consecuencia TODO NO VA 😭😭
+            interface.pos = (interface.pos + 1) % 4;
+            interface.update_camera_view(interface.pos);
+            break;
+
+            //Zooms
+        case '+': // zoom in
+            interface.camera.zoom(0.95);
+            interface.camera.apply();
+            break;
+        case '-': // zoom out
+            interface.camera.zoom(1.05);
+            interface.camera.apply();
+            break;
+
+            //Planes play
+        case 'n': // increase the distance of the near plane
+            interface.camera.znear += 0.2;
+            interface.camera.apply();
+            break;
+        case 'N': // decrease the distance of the near plane
+            interface.camera.znear -= 0.2;
+            interface.camera.apply();
+            break;
+
+            // split the window into four views
+        case '4':
+            interface.windowChange = !interface.windowChange;
+            break;
+
+            //Camera type
+        case 'c':
+        case 'C':
+            interface.camera.toggleInteractive();
+            break;
+
+            //Near and Far plane Play (F = N?)
+        case 'f':
+            interface.camera.moveNear(0.1);
+            break;
+        case 'F':
+            interface.camera.moveNear(-0.1);
+            break;
+
+            //DISCLAIMER: Tarda mucho mucho en que el far plane corte la figura
+        case 'b':
+            interface.camera.moveFar(0.1);
+            break;
+        case 'B':
+            interface.camera.moveFar(-0.1);
             break;
     }
     glutPostRedisplay();
 }
 
 void cgvInterface::specialFunc(int key, int x, int y) {
-    switch (key) {
-        case GLUT_KEY_LEFT:  _instance->scene.applyTranslation(1, 0, 0); break;
-        case GLUT_KEY_RIGHT: _instance->scene.applyTranslation(-1, 0, 0); break;
-        case GLUT_KEY_UP:    _instance->scene.applyTranslation(0, 0, 1); break;
-        case GLUT_KEY_DOWN:  _instance->scene.applyTranslation(0, 0, -1); break;
+    //Teclas para mover en modo camera
+    if (interface.camera.interactiveMode) {
+        switch (key) {
+            case GLUT_KEY_LEFT:
+                interface.camera.orbit(-0.05);
+                break;
+            case GLUT_KEY_RIGHT:
+                interface.camera.orbit(0.05);
+                break;
+            case GLUT_KEY_UP:
+                interface.camera.pitch(0.05);
+                break;
+            case GLUT_KEY_DOWN:
+                interface.camera.pitch(-0.05);
+                break;
+        }
+    } else {
+        //Teclas para mover en modo normal
+        switch (key) {
+            case GLUT_KEY_LEFT:  interface.scene.applyTranslation(1, 0, 0); break;
+            case GLUT_KEY_RIGHT: interface.scene.applyTranslation(-1, 0, 0); break;
+            case GLUT_KEY_UP:    interface.scene.applyTranslation(0, 0, 1); break;
+            case GLUT_KEY_DOWN:  interface.scene.applyTranslation(0, 0, -1); break;
+        }
     }
     glutPostRedisplay();
 }
-
 /**
 * Method that defines the camera and viewport. Called automatically
 * when the window is resized.
@@ -185,8 +320,8 @@ void cgvInterface::reshapeFunc (int w, int h)
     glViewport ( 0, 0, (GLsizei) w, (GLsizei) h );
 
 // save the new viewport values
-    _instance->set_window_width ( w );
-    _instance->set_window_height ( h );
+    interface.set_window_width ( w );
+    interface.set_window_height ( h );
 
 // sets the projection type to use
     glMatrixMode(GL_PROJECTION);
@@ -200,13 +335,95 @@ void cgvInterface::reshapeFunc (int w, int h)
 
     gluLookAt(1.5, 1.0, 2.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0); // perspective view
 // gluLookAt(1.5, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0); // plan view from the positive X axis
+
+    //Practica 2
+
+    // Size the viewport to the new window width and height
+    // Save the new viewport values
+    interface.set_window_width(w);
+    interface.set_window_height(h);
+
+    // Set the camera and projection parameters
+    interface.camera.apply();
 }
 
 /**
 * Method for displaying the scene
 */
 void cgvInterface::displayFunc ()
-{ _instance->scene.display( _instance->menuSelection );
+{
+    // Controlamos nosotros la renderización (single / multi view).
+
+    // Clear once
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    int w = interface.get_window_width();
+    int h = interface.get_window_height();
+    if (w <= 0) w = glutGet(GLUT_WINDOW_WIDTH);
+    if (h <= 0) h = glutGet(GLUT_WINDOW_HEIGHT);
+
+    GLfloat light0[] = { 10.0f, 8.0f, 9.0f, 1.0f };
+    glLightfv(GL_LIGHT0, GL_POSITION, light0);
+    glEnable(GL_LIGHT0);
+
+    if (!interface.windowChange) {
+        // modo normal: usamos la cámara guardada y pintamos la escena a pantalla completa
+        glViewport(0, 0, w, h);
+        interface.camera.apply(); // aplica la cámara "oficial"
+        interface.scene.renderSceneContent(interface.menuSelection);
+    }
+    else {
+        // modo 4 vistas: NO modificamos interface.camera permanentemente
+        // calculamos tamaño de sub-viewport adaptado a pantalla
+        int vw = w / 2;
+        int vh = h / 2;
+        // helper lambda para aplicar proyección+view local sin tocar interface.camera
+        auto apply_local_camera = [&](cgvPoint3D eye, cgvPoint3D center, cgvPoint3D up){
+            // proyección: respetamos el tipo actual de interface.camera
+            glMatrixMode(GL_PROJECTION);
+            glLoadIdentity();
+            if (interface.camera.type == CGV_PARALLEL) {
+                glOrtho(interface.camera.xwmin, interface.camera.xwmax,
+                        interface.camera.ywmin, interface.camera.ywmax,
+                        interface.camera.znear, interface.camera.zfar);
+            } else if (interface.camera.type == CGV_FRUSTRUM) {
+                glFrustum(interface.camera.xwmin, interface.camera.xwmax,
+                          interface.camera.ywmin, interface.camera.ywmax,
+                          interface.camera.znear, interface.camera.zfar);
+            } else { // perspective
+                double asp = (vw == 0 || vh == 0) ? interface.camera.aspect : (double)vw / (double)vh;
+                gluPerspective(interface.camera.angle, asp, interface.camera.znear, interface.camera.zfar);
+            }
+            glMatrixMode(GL_MODELVIEW);
+            glLoadIdentity();
+            gluLookAt(eye[X], eye[Y], eye[Z],
+                      center[X], center[Y], center[Z],
+                      up[X], up[Y], up[Z]);
+        };
+
+        // 1) Perspectiva/interactiva (arriba izquierda)
+        glViewport(0, h - vh, vw, vh);
+        interface.camera.apply(); // Cámara real, vista normal
+        interface.scene.renderSceneContent(interface.menuSelection);
+
+// 2) Planta (arriba derecha)
+        glViewport(vw, h - vh, vw, vh);
+        apply_local_camera(cgvPoint3D(0.0, 5.0, 0.0), cgvPoint3D(0,0,0), cgvPoint3D(0,0,-1));
+        interface.scene.renderSceneContent(interface.menuSelection);
+
+// 3) Alzado (abajo izquierda)
+        glViewport(0, 0, vw, vh);
+        apply_local_camera(cgvPoint3D(0.0, 0.0, 5.0), cgvPoint3D(0,0,0), cgvPoint3D(0,1,0));
+        interface.scene.renderSceneContent(interface.menuSelection);
+
+// 4) Perfil (abajo derecha)
+        glViewport(vw, 0, vw, vh);
+        apply_local_camera(cgvPoint3D(5.0, 0.0, 0.0), cgvPoint3D(0,0,0), cgvPoint3D(0,1,0));
+        interface.scene.renderSceneContent(interface.menuSelection);
+    }
+
+    // swap buffers UNA vez
+    glutSwapBuffers();
 }
 
 /**
@@ -265,4 +482,80 @@ void cgvInterface::set_window_width (int _window_width )
 */
 void cgvInterface::set_window_height (int _window_height )
 { window_height = _window_height;
+}
+
+void cgvInterface::create_world(void) {
+    // crear camaras
+    p0 = cgvPoint3D(3.0, 2.0, 4);
+    r = cgvPoint3D(0, 0, 0);
+    V = cgvPoint3D(0, 1.0, 0);
+
+    interface.camera.set(CGV_PARALLEL, p0, r, V,
+                         -1 * 3, 1 * 3, -1 * 3, 1 * 3, 1, 200);
+
+    //perspective parameters
+    interface.camera.angle = 60.0;
+    interface.camera.aspect = 1.0;
+}
+
+//TODO arreglar
+void cgvInterface::update_camera_view(int pos) {
+    //Que este solo de 0 a 3
+    int p = pos % 4;
+    if (p < 0) p += 4;
+
+    cgvPoint3D eye, center(0,0,0), up;
+
+    // Definición de las 4 vistas:
+    // 0 = vista "original" (usamos p0,r,V ya definidos en create_world)
+    // 1 = planta (desde +Y)
+    // 2 = perfil (desde +X)
+    // 3 = alzado (desde +Z)
+    switch (p) {
+        case 0:
+            eye = p0;        // conserva la posición original
+            center = r;
+            up = V;
+            break;
+        case 1: // planta (desde arriba)
+            eye = cgvPoint3D(0.0, 5.0, 0.0);
+            center = cgvPoint3D(0.0, 0.0, 0.0);
+            // up hacia -Z para que la planta "mire" con X a la derecha
+            up = cgvPoint3D(0.0, 0.0, -1.0);
+            break;
+        case 2: // perfil (desde +X)
+            eye = cgvPoint3D(5.0, 0.0, 0.0);
+            center = cgvPoint3D(0.0, 0.0, 0.0);
+            up = cgvPoint3D(0.0, 1.0, 0.0);
+            break;
+        case 3: // alzado (desde +Z)
+            eye = cgvPoint3D(0.0, 0.0, 5.0);
+            center = cgvPoint3D(0.0, 0.0, 0.0);
+            up = cgvPoint3D(0.0, 1.0, 0.0);
+            break;
+    }
+
+    // Aplicamos sin cambiar innecesariamente parámetros de proyección:
+    if (interface.camera.type == CGV_PARALLEL || interface.camera.type == CGV_FRUSTRUM) {
+        // mantenemos xwmin/xwmax/ywmin/ywmax/znear/zfar
+        interface.camera.set(
+                interface.camera.type,
+                eye, center, up,
+                interface.camera.xwmin, interface.camera.xwmax,
+                interface.camera.ywmin, interface.camera.ywmax,
+                interface.camera.znear, interface.camera.zfar
+        );
+    } else { // CGV_PERSPECTIVE
+        // preservamos angle, aspect, znear, zfar
+        double aspect = interface.camera.aspect;
+        interface.camera.set(
+                CGV_PERSPECTIVE,
+                eye, center, up,
+                interface.camera.angle, aspect,
+                interface.camera.znear, interface.camera.zfar
+        );
+    }
+
+    // aplicamos la cámara resultante (actualiza matrices)
+    interface.camera.apply();
 }

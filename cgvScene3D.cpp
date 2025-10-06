@@ -120,8 +120,8 @@ void cgvScene3D::display(int scene)
         }
     }
 
-    glPopMatrix(); // restores the modeling matrix
-    glutSwapBuffers(); // used instead of glFlush() to prevent flickering
+    glPopMatrix();
+    glutSwapBuffers();
 }
 /**
 * Renders scene A by calling OpenGL functions
@@ -186,7 +186,6 @@ void cgvScene3D::renderSceneA(){
     Transform &t = transforms[0];
     if (modeRST) {
     // To achieve application order R then S then T on the object, we call the GL functions in the order: Translate, Scale, Rotate.
-    // OpenGL multiplies the matrices so the rightmost operation (Rotate) is applied first to the object: v' = T * S * R * v -> R then S then T.
         glTranslatef(t.tx, t.ty, t.tz);
         glScalef(t.s, t.s, t.s);
     // apply rotations so that X rotation happens first, then Y, then Z
@@ -506,4 +505,18 @@ void cgvScene3D::applyScaling(float factor) {
         // Acumula escala homogénea en 's'
         transforms[selected].s *= factor;
     }
+}
+
+
+void cgvScene3D::renderSceneContent(int scene)
+{
+    if (axes)
+        paint_axes();
+
+    if (scene == SceneA)
+        renderSceneA();
+    else if (scene == SceneB)
+        renderSceneB();
+    else if (scene == SceneC)
+        renderSceneC();
 }

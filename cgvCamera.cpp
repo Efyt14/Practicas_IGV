@@ -101,3 +101,74 @@ void cgvCamera::zoom(double factor) {
         }
     }
 }
+
+void cgvCamera::toggleInteractive() {
+    interactiveMode = !interactiveMode;
+    if (interactiveMode) {
+        // inicializamos parámetros si es la primera vez
+        cgvPoint3D dir(r[X] - P0[X], r[Y] - P0[Y], r[Z] - P0[Z]);
+        radius = sqrt(dir[X]*dir[X] + dir[Y]*dir[Y] + dir[Z]*dir[Z]);
+        orbitAngleY = atan2(P0[X], P0[Z]);
+        pitchAngle = asin(P0[Y] / radius);
+        selfRotY = 0.0;
+    }
+}
+
+void cgvCamera::orbit(double delta) {
+    orbitAngleY += delta;
+    updatePosition();
+}
+
+void cgvCamera::pitch(double delta) {
+    pitchAngle += delta;
+
+    updatePosition();
+}
+
+void cgvCamera::rotateY(double delta) {
+    selfRotY += delta;
+    updatePosition();
+}
+
+void cgvCamera::updatePosition() {
+    // calculamos posición orbital alrededor del origen
+    double x = radius * cos(pitchAngle) * sin(orbitAngleY);
+    double y = radius * sin(pitchAngle);
+    double z = radius * cos(pitchAngle) * cos(orbitAngleY);
+
+    P0 = cgvPoint3D(x, y, z);
+    r = cgvPoint3D(0, 0, 0); // siempre mira al origen
+    V = cgvPoint3D(0, 1, 0);
+
+    // rotación local sobre Y
+    if (fabs(selfRotY) > 1e-6) {
+        double cosA = cos(selfRotY);
+        double sinA = sin(selfRotY);
+        // rotamos el punto de vista en torno al eje Y local
+        cgvPoint3D dir(r[X] - P0[X], r[Y] - P0[Y], r[Z] - P0[Z]);
+        double newX = dir[X] * cosA + dir[Z] * sinA;
+        double newZ = -dir[X] * sinA + dir[Z] * cosA;
+        r = cgvPoint3D(P0[X] + newX, P0[Y] + dir[Y], P0[Z] + newZ);
+    }
+
+    apply();
+}
+
+void cgvCamera::moveNear(double delta) {
+    znear += delta;
+    if (znear < 0.1) { // Evitar valores negativos
+        znear = 0.1;
+    }
+    if (znear >= zfar - 0.1) { // Evitar que se pase del zfar
+        znear = zfar - 0.1;
+    }
+    apply();
+}
+
+void cgvCamera::moveFar(double delta) {
+    zfar += delta;
+    if (zfar <= znear + 0.1) { // Evitar que se meta más dentro del znear
+        zfar = znear + 0.1;
+    }
+    apply();
+}
