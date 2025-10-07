@@ -156,7 +156,11 @@ void cgvInterface::keyboardFunc (unsigned char key, int x, int y) {
             if (interface.camera.interactiveMode) {
                 //Practica 2
                 // Si el modo interactivo está activo, rota la cámara
-                interface.camera.rotateY((key == 'y') ? 0.05f : -0.05f);
+                if (key == 'y') {
+                    interface.camera.rotateY(0.05f);
+                } else {
+                    interface.camera.rotateY(-0.05f);
+                }
                 interface.camera.apply();
             } else {
                 // Si no, rota la escena como antes
@@ -183,7 +187,8 @@ void cgvInterface::keyboardFunc (unsigned char key, int x, int y) {
         case 'm':
             interface.scene.deferredMode = false; // libre
             // Al cambiar a libre, si había acumuladas, ejecutarlas
-            for (auto &op: interface.scene.ops[interface.scene.selected]) {
+            for (int i = 0; i < interface.scene.ops[interface.scene.selected].size(); ++i) {
+                std::function<void()>& op = interface.scene.ops[interface.scene.selected][i];
                 op();
             }
             interface.scene.ops[interface.scene.selected].clear();
@@ -347,14 +352,50 @@ void cgvInterface::reshapeFunc (int w, int h)
     interface.camera.apply();
 }
 
+void apply_local_camera(
+        const cgvCamera& camera,
+        int vw, int vh,
+        const cgvPoint3D& eye,
+        const cgvPoint3D& center,
+        const cgvPoint3D& up)
+{
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+
+    if (camera.type == CGV_PARALLEL) {
+        glOrtho(camera.xwmin, camera.xwmax,
+                camera.ywmin, camera.ywmax,
+                camera.znear, camera.zfar);
+    }
+    else if (camera.type == CGV_FRUSTRUM) {
+        glFrustum(camera.xwmin, camera.xwmax,
+                  camera.ywmin, camera.ywmax,
+                  camera.znear, camera.zfar);
+    }
+    else { // perspective
+        double asp;
+        if (vw == 0 || vh == 0)
+            asp = camera.aspect;
+        else
+            asp = vw/vh;
+
+        gluPerspective(camera.angle, asp, camera.znear, camera.zfar);
+    }
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+
+    gluLookAt(eye[X], eye[Y], eye[Z],
+              center[X], center[Y], center[Z],
+              up[X], up[Y], up[Z]);
+}
+
+
 /**
 * Method for displaying the scene
 */
-void cgvInterface::displayFunc ()
+void cgvInterface::displayFunc()
 {
-    // Controlamos nosotros la renderización (single / multi view).
-
-    // Clear once
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     int w = interface.get_window_width();
@@ -367,62 +408,46 @@ void cgvInterface::displayFunc ()
     glEnable(GL_LIGHT0);
 
     if (!interface.windowChange) {
-        // modo normal: usamos la cámara guardada y pintamos la escena a pantalla completa
+        // ---- Vista normal ----
         glViewport(0, 0, w, h);
-        interface.camera.apply(); // aplica la cámara "oficial"
+        interface.camera.apply();
         interface.scene.renderSceneContent(interface.menuSelection);
     }
-    else {
-        // modo 4 vistas: NO modificamos interface.camera permanentemente
-        // calculamos tamaño de sub-viewport adaptado a pantalla
+    else { //TODO Pertracala infame, canallesco 😤😤
+        // ---- Vista 4 ventanas ----
         int vw = w / 2;
         int vh = h / 2;
-        // helper lambda para aplicar proyección+view local sin tocar interface.camera
-        auto apply_local_camera = [&](cgvPoint3D eye, cgvPoint3D center, cgvPoint3D up){
-            // proyección: respetamos el tipo actual de interface.camera
-            glMatrixMode(GL_PROJECTION);
-            glLoadIdentity();
-            if (interface.camera.type == CGV_PARALLEL) {
-                glOrtho(interface.camera.xwmin, interface.camera.xwmax,
-                        interface.camera.ywmin, interface.camera.ywmax,
-                        interface.camera.znear, interface.camera.zfar);
-            } else if (interface.camera.type == CGV_FRUSTRUM) {
-                glFrustum(interface.camera.xwmin, interface.camera.xwmax,
-                          interface.camera.ywmin, interface.camera.ywmax,
-                          interface.camera.znear, interface.camera.zfar);
-            } else { // perspective
-                double asp = (vw == 0 || vh == 0) ? interface.camera.aspect : (double)vw / (double)vh;
-                gluPerspective(interface.camera.angle, asp, interface.camera.znear, interface.camera.zfar);
-            }
-            glMatrixMode(GL_MODELVIEW);
-            glLoadIdentity();
-            gluLookAt(eye[X], eye[Y], eye[Z],
-                      center[X], center[Y], center[Z],
-                      up[X], up[Y], up[Z]);
-        };
 
-        // 1) Perspectiva/interactiva (arriba izquierda)
+        // 1) Perspectiva / interactiva (arriba izquierda)
         glViewport(0, h - vh, vw, vh);
-        interface.camera.apply(); // Cámara real, vista normal
+        interface.camera.apply();
         interface.scene.renderSceneContent(interface.menuSelection);
 
-// 2) Planta (arriba derecha)
+        // 2) Planta (arriba derecha)
         glViewport(vw, h - vh, vw, vh);
-        apply_local_camera(cgvPoint3D(0.0, 5.0, 0.0), cgvPoint3D(0,0,0), cgvPoint3D(0,0,-1));
+        apply_local_camera(interface.camera, vw, vh,
+                           cgvPoint3D(0.0, 5.0, 0.0),
+                           cgvPoint3D(0.0, 0.0, 0.0),
+                           cgvPoint3D(0.0, 0.0, -1.0));
         interface.scene.renderSceneContent(interface.menuSelection);
 
-// 3) Alzado (abajo izquierda)
+        // 3) Alzado (abajo izquierda)
         glViewport(0, 0, vw, vh);
-        apply_local_camera(cgvPoint3D(0.0, 0.0, 5.0), cgvPoint3D(0,0,0), cgvPoint3D(0,1,0));
+        apply_local_camera(interface.camera, vw, vh,
+                           cgvPoint3D(0.0, 0.0, 5.0),
+                           cgvPoint3D(0.0, 0.0, 0.0),
+                           cgvPoint3D(0.0, 1.0, 0.0));
         interface.scene.renderSceneContent(interface.menuSelection);
 
-// 4) Perfil (abajo derecha)
+        // 4) Perfil (abajo derecha)
         glViewport(vw, 0, vw, vh);
-        apply_local_camera(cgvPoint3D(5.0, 0.0, 0.0), cgvPoint3D(0,0,0), cgvPoint3D(0,1,0));
+        apply_local_camera(interface.camera, vw, vh,
+                           cgvPoint3D(5.0, 0.0, 0.0),
+                           cgvPoint3D(0.0, 0.0, 0.0),
+                           cgvPoint3D(0.0, 1.0, 0.0));
         interface.scene.renderSceneContent(interface.menuSelection);
     }
 
-    // swap buffers UNA vez
     glutSwapBuffers();
 }
 
