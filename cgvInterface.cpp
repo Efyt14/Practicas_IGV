@@ -536,8 +536,12 @@ void cgvInterface::update_camera_view(int pos) {
     // 1 = planta (desde +Y)
     // 2 = perfil (desde +X)
     // 3 = alzado (desde +Z)
+
     switch (p) {
         case 0:
+            p0 = cgvPoint3D(3.0, 2.0, 4);
+            r = cgvPoint3D(0, 0, 0);
+            V = cgvPoint3D(0, 1.0, 0);
             eye = p0;        // conserva la posición original
             center = r;
             up = V;
@@ -580,7 +584,5 @@ void cgvInterface::update_camera_view(int pos) {
                 interface.camera.znear, interface.camera.zfar
         );
     }
-
-    // aplicamos la cámara resultante (actualiza matrices)
     interface.camera.apply();
 }

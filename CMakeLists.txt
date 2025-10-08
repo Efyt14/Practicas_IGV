@@ -6,16 +6,15 @@ set(CMAKE_CXX_STANDARD 14)
 include_directories(.)
 
 add_executable(${PROJECT_NAME}
-        cgvInterface.cpp
         cgvInterface.h
         pr2.cpp
-        cgvInterface.cpp
         cgvScene3D.cpp
         cgvScene3D.h
         cgvPoint.h
         cgvCamera.h
         cgvPoint.cpp
-        cgvCamera.cpp)
+        cgvCamera.cpp
+        cgvInterface.cpp)
 
 if (LINUX)
     find_path(OPENGL_REGISTRY_INCLUDE_DIRS "GL/glcorearb.h")
