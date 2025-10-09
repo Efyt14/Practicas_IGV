@@ -194,7 +194,9 @@ void cgvScene3D::renderSceneA(){
         glRotatef(t.rx, 1.0f, 0.0f, 0.0f);
     } else {
     // apply operations in the order they were recorded
-        for (auto &op : ops[0]) op();
+        for (std::function<void()>& op : ops[0]) {
+            op();
+        }
     }
     drawGun();
     glPopMatrix();
@@ -212,7 +214,9 @@ void cgvScene3D::renderSceneB(){
         glRotatef(t.ry, 0.0f, 1.0f, 0.0f);
         glRotatef(t.rx, 1.0f, 0.0f, 0.0f);
     } else {
-        for (auto &op : ops[1]) op();
+        for (std::function<void()>& op : ops[1]) {
+            op();
+        }
     }
     drawLock();
     glPopMatrix();}
@@ -229,7 +233,9 @@ void cgvScene3D::renderSceneC() {
         glRotatef(t.ry, 0.0f, 1.0f, 0.0f);
         glRotatef(t.rx, 1.0f, 0.0f, 0.0f);
     } else {
-        for (auto &op : ops[2]) op();
+        for (std::function<void()> &op: ops[2]) {
+            op();
+        }
     }
     drawWooper();
     glPopMatrix();
@@ -256,11 +262,22 @@ void cgvScene3D::set_axes(bool _axes )
 }
 
 // Pistola negra
-void cgvScene3D::drawGun() {
-    // Color negro
-    GLfloat black[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-    glMaterialfv(GL_FRONT, GL_EMISSION, black);
+void cgvScene3D::drawGun() { //Basada en la pistola de persona 5 royal
 
+    // CUERPO / SLIDE (parte superior del armazón) -- Mas claro
+
+    GLfloat grey[] = {0.15f, 0.15f, 0.15f};
+    glMaterialfv(GL_FRONT, GL_EMISSION, grey);
+
+    glPushMatrix();
+    glTranslatef(0.6f, -0.15f, 0.0f);
+    glScalef(1.8f, 0.18f, 0.25f);
+    glutSolidCube(1.0f);
+    glPopMatrix();
+
+    // Color negro
+    GLfloat black[] = { 0.0f, 0.0f, 0.0f};
+    glMaterialfv(GL_FRONT, GL_EMISSION, black);
 
     // CAÑÓN (pieza alargada)
     glPushMatrix();
@@ -268,15 +285,6 @@ void cgvScene3D::drawGun() {
     glScalef(1.8f, 0.18f, 0.25f);
     glutSolidCube(1.0f);
     glPopMatrix();
-
-
-    // CUERPO / SLIDE (parte superior del armazón)
-    glPushMatrix();
-    glTranslatef(0.15f, -0.15f, 0.0f);
-    glScalef(0.9f, 0.2f, 0.25f);
-    glutSolidCube(1.0f);
-    glPopMatrix();
-
 
     // EMPUÑADURA
     glPushMatrix();
@@ -287,15 +295,90 @@ void cgvScene3D::drawGun() {
     glPopMatrix();
 
 
-    // GUARDABISAGRA (pequeño cilindro como desencadenador / arco)
+    // GATILLO (Accionador)
     glPushMatrix();
-    glTranslatef(-0.05f, -0.55f, 0.0f);
-    glRotatef(90.0f, 0.0f, 1.0f, 0.0f);
-    GLUquadric* qg = gluNewQuadric();
+    glTranslatef(-0.055f, -0.45f, 0.0f);
+    glRotated(90,1,0,0);
+    glScalef(1.5f, 0.75f, 1.25f);
+    glutSolidSphere(0.08f, 12, 6);
+    glPopMatrix();
 
-    // cilindro estrecho que representa un guardapolvo/parte curva
-    gluCylinder(qg, 0.05f, 0.05f, 0.36f, 12, 3);
-    gluDeleteQuadric(qg);
+    // GUARDABISAGRA (esfera achatada como desencadenador / arco)
+    glPushMatrix();
+    glTranslatef(-0.05f, -0.45f, 0.0f);
+    glScalef(0.1f, 0.25f, 0.2f);
+    glutSolidCube(1.0f);
+    glPopMatrix();
+
+    //Recubre Gatillo
+    glPushMatrix();
+    glTranslatef(0.0f, -0.45f, 0.0f);
+    glScalef(1.55f,1.5f,1.2f);
+    glutSolidTorus(0.035f, 0.115f, 30, 40);
+    glPopMatrix();
+
+    // Mirilla
+    glPushMatrix();
+    glTranslatef(-0.1f, -0.05f, 0.07f); // En el lateral del cuerpo/slide 1
+    glRotated(90, 0, 1, 0);
+    glScalef(0.1f, 0.05f, 0.025f);
+    glutSolidCube(1.0f);
+    glPopMatrix();
+
+    glPushMatrix();
+    glTranslatef(-0.1f, -0.05f, -0.07f); // En el lateral del cuerpo/slide 2
+    glRotated(90, 0, 1, 0);
+    glScalef(0.1f, 0.05f, 0.025f);
+    glutSolidCube(1.0f);
+    glPopMatrix();
+
+    glPushMatrix();
+    glTranslatef(-0.1f, -0.05f, 0.07f); // En el lateral del cuerpo/slide 3 (alzillo)
+    glRotated(90, 0, 1, 0);
+    glScalef(0.075f, 0.15f, 0.025f);
+    glutSolidCube(1.0f);
+    glPopMatrix();
+
+    glPushMatrix();
+    glTranslatef(-0.1f, -0.05f, -0.07f); // En el lateral del cuerpo/slide 4 (alzillo 2)
+    glRotated(90, 0, 1, 0);
+    glScalef(0.075f, 0.15f, 0.025f);
+    glutSolidCube(1.0f);
+    glPopMatrix();
+
+    // Punto de Mira (Delante)
+    glPushMatrix();
+    glTranslatef(1.4f, -0.05f, 0.0f); // En la punta del cañón
+    glScalef(0.1f, 0.1f, 0.05f);
+    glutSolidCube(1.0f);
+    glPopMatrix();
+
+    // Seguro (Detrás)
+    glPushMatrix();
+    glTranslatef(-0.28f, -0.07f, 0.0f); // Detrás del cuerpo/slide
+    glutSolidSphere(0.05f,15,2);
+    glPopMatrix();
+
+    //Silenciador
+    glMaterialfv(GL_FRONT, GL_EMISSION, grey);
+    glPushMatrix();
+    glTranslatef(1.47f,-0.3f,0.0f);
+    glutSolidSphere(0.05f, 15,15);
+    glPopMatrix();
+
+    //Salida de la bala -- Formada por un toroide que represente la forma circular y una esfera que sea el boquete
+    GLfloat white[] = { 0.3f, 0.3f, 0.3f};
+    glMaterialfv(GL_FRONT, GL_EMISSION, white);
+    glPushMatrix();
+    glTranslatef(1.49f,-0.15f,0.0f);
+    glRotated(90,0,1,0);
+    glutSolidTorus(0.025f,0.025f,15,15);
+    glPopMatrix();
+
+    glMaterialfv(GL_FRONT, GL_EMISSION, black);
+    glPushMatrix();
+    glTranslatef(1.49f, -0.15f, 0.0f);
+    glutSolidSphere(0.025f, 15, 15);
     glPopMatrix();
 }
 

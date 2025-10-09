@@ -68,7 +68,7 @@ void cgvInterface::configure_environment (int argc, char** argv
     glEnable( GL_LIGHTING ); // enable scene lighting
     glEnable( GL_NORMALIZE ); // normalize normal vectors for lighting calculations
 
-    create_world();// Añadido para la practica 2
+    createWorld();// Añadido para la practica 2, crear la escena de la camara que mire los objetos
 }
 
 /**
@@ -164,8 +164,12 @@ void cgvInterface::keyboardFunc (unsigned char key, int x, int y) {
                 interface.camera.apply();
             } else {
                 // Si no, rota la escena como antes
-                if (key == 'y') interface.scene.applyRotation(0, ROT_STEP, 0);
-                else interface.scene.applyRotation(0, -ROT_STEP, 0);
+                if (key == 'y') {
+                    interface.scene.applyRotation(0, ROT_STEP, 0);
+                }
+                else {
+                    interface.scene.applyRotation(0, -ROT_STEP, 0);
+                }
             }
             break;
         case 'z':
@@ -230,9 +234,9 @@ void cgvInterface::keyboardFunc (unsigned char key, int x, int y) {
 
         case 'v': // Change the camera position to display plan, profile, elevation, or perspective views
         case 'V':
-            // mantener interface.pos entre 0..3 y actualizar la cámara en consecuencia TODO NO VA 😭😭
+            // mantener interface.pos entre 0..3 y actualizar la cámara en consecuencia TODO NO VA 😭😭, YA VA GRACIAS GEMA 😭😭
             interface.pos = (interface.pos + 1) % 4;
-            interface.update_camera_view(interface.pos);
+            interface.updateCamera(interface.pos);
             break;
 
             //Zooms
@@ -276,10 +280,10 @@ void cgvInterface::keyboardFunc (unsigned char key, int x, int y) {
 
             //DISCLAIMER: Tarda mucho mucho en que el far plane corte la figura
         case 'b':
-            interface.camera.moveFar(0.1);
+            interface.camera.moveFar(0.25);
             break;
         case 'B':
-            interface.camera.moveFar(-0.1);
+            interface.camera.moveFar(-0.25);
             break;
     }
     glutPostRedisplay();
@@ -509,7 +513,7 @@ void cgvInterface::set_window_height (int _window_height )
 { window_height = _window_height;
 }
 
-void cgvInterface::create_world(void) {
+void cgvInterface::createWorld(void) {
     // crear camaras
     p0 = cgvPoint3D(3.0, 2.0, 4);
     r = cgvPoint3D(0, 0, 0);
@@ -523,8 +527,8 @@ void cgvInterface::create_world(void) {
     interface.camera.aspect = 1.0;
 }
 
-//TODO arreglar
-void cgvInterface::update_camera_view(int pos) {
+//TODO arreglao
+void cgvInterface::updateCamera(int pos) {
     //Que este solo de 0 a 3
     int p = pos % 4;
     if (p < 0) p += 4;
@@ -532,11 +536,10 @@ void cgvInterface::update_camera_view(int pos) {
     cgvPoint3D eye, center(0,0,0), up;
 
     // Definición de las 4 vistas:
-    // 0 = vista "original" (usamos p0,r,V ya definidos en create_world)
+    // 0 = vista "original" (usamos p0,r,V ya definidos en createWorld)
     // 1 = planta (desde +Y)
     // 2 = perfil (desde +X)
     // 3 = alzado (desde +Z)
-
     switch (p) {
         case 0:
             p0 = cgvPoint3D(3.0, 2.0, 4);
@@ -584,5 +587,7 @@ void cgvInterface::update_camera_view(int pos) {
                 interface.camera.znear, interface.camera.zfar
         );
     }
+
+    // aplicamos la cámara resultante (actualiza matrices)
     interface.camera.apply();
 }

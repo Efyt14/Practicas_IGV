@@ -75,9 +75,9 @@ public:
 
     static void specialFunc(int key, int x, int y);
 
-    void create_world(void);
+    void createWorld(void);
 
-    void update_camera_view(int pos);
+    void updateCamera(int pos);
 };
 
 #endif   // __IGVINTERFAZ
