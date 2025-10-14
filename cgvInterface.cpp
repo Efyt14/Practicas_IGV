@@ -280,10 +280,10 @@ void cgvInterface::keyboardFunc (unsigned char key, int x, int y) {
 
             //DISCLAIMER: Tarda mucho mucho en que el far plane corte la figura
         case 'b':
-            interface.camera.moveFar(0.25);
+            interface.camera.moveFar(0.75);
             break;
         case 'B':
-            interface.camera.moveFar(-0.25);
+            interface.camera.moveFar(-0.75);
             break;
     }
     glutPostRedisplay();
@@ -542,6 +542,7 @@ void cgvInterface::updateCamera(int pos) {
     // 3 = alzado (desde +Z)
     switch (p) {
         case 0:
+            //Definicion original de la camara otra vez para que no aparezca en blanco un plano
             p0 = cgvPoint3D(3.0, 2.0, 4);
             r = cgvPoint3D(0, 0, 0);
             V = cgvPoint3D(0, 1.0, 0);

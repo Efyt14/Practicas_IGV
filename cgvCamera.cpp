@@ -124,7 +124,7 @@ void cgvCamera::pitch(double delta) {
     // Modificamos el ángulo de pitch
     pitchAngle += delta;
 
-    // Capamos el pitcheo entre -90º y +90º (en radianes) para que funcione como la camara de un videojuego y no se pueda dar la vuelta 360
+    // Capamos el pitcheo entre -90º y +90º (en radianes) para que funcione como la camara de un videojuego y no se pueda dar la vuelta 360 y maree al jugador 🤓☝
     const double limit = M_PI / 2.0;
     if (pitchAngle > limit) pitchAngle = limit;
     if (pitchAngle < -limit) pitchAngle = -limit;
@@ -174,8 +174,8 @@ void cgvCamera::moveNear(double delta) {
 
 void cgvCamera::moveFar(double delta) {
     zfar += delta;
-    if (zfar <= znear + 0.1) { // Evitar que se meta más dentro del znear
-        zfar = znear + 0.1;
+    if (zfar <= znear + 0.5) { // Evitar que se meta más dentro del znear
+        zfar = znear + 0.5;
     }
     apply();
 }
