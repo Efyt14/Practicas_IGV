@@ -1,3 +1,0 @@
-C:/Users/admin/Downloads/pr2a_conan_resuelta/pr2a_conan_resuelta/cmake-build-debug/CMakeFiles/pr2a.dir
-C:/Users/admin/Downloads/pr2a_conan_resuelta/pr2a_conan_resuelta/cmake-build-debug/CMakeFiles/edit_cache.dir
-C:/Users/admin/Downloads/pr2a_conan_resuelta/pr2a_conan_resuelta/cmake-build-debug/CMakeFiles/rebuild_cache.dir
