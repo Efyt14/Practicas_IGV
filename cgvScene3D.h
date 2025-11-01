@@ -1,5 +1,3 @@
-#include <vector>
-#include <functional>
 #ifndef __IGVESCENA3D
 #define __IGVESCENA3D
 
@@ -11,98 +9,93 @@
 
 #include <GL/glut.h>
 
-#endif   // defined(__APPLE__) && defined(__MACH__)
+#endif // defined(__APPLE__) && defined(__MACH__)
+
+#include "cgvTriangleMesh.h"
+
 
 /**
-* Objects of this class represent 3D scenes for display
-*/
-class cgvScene3D {
-public:
-
-    // Para cada objeto vamos a guardar sus transformaciones acumuladas
-    struct Transform {
-        float tx, ty, tz;   // traslación
-        float rx, ry, rz;   // rotación
-        float s;            // escala
-    };
-
-    Transform transforms[3];   // un transform por cada objeto
-    int selected = 0;          // 0 = A, 1 = B, 2 = C
-    bool modeRST = true;       // true = aplicar en orden fijo R-S-T, false = orden pulsado
-    std::vector<std::function<void()>> ops[3]; // cola de operaciones si es modo libre
-    bool deferredMode;  // false = libre, true = diferido
-
-
-
-    const int SceneA = 1; ///< Internal identifier for scene A
-    const int SceneB = 2; ///< Internal identifier for scene B
-    const int SceneC = 3; ///< Internal identifier for scene C
-
-    const char *Scene_NameA = "Scene A"; ///< Label for scene A
-    const char *Scene_NameB = "Scene B"; ///< Label for scene B
-    const char *Scene_NameC = "Scene C"; ///< Label for scene C
-private:
+ * Objects of this class represent 3D scenes for visualisation.
+ */
+class cgvScene3D
+{  private:
     // Attributes
-    bool axes = true; ///< Indicates whether or not to draw the coordinate axes
-    int nStacksX=1;
-    int nStacksY=1;
-    int nStacksZ=1;
+    bool axes = true;   ///< Indicates whether to draw the coordinate axes or not
+
+    // Section A: Add attributes with rotation angles in X, Y, and Z here.
+    double rotX, rotY, rotZ = 0.0;
+    cgvTriangleMesh *mesh = nullptr; ///< Triangle mesh associated with the scene
+
+
 
 public:
-    // Default constructors and destructor
-    /// Default constructor
-    cgvScene3D();
+    //CREACION DE ESCENAS
+    std::string currentSceneName;
 
-    /// Destructor
-    ~cgvScene3D() = default;
+    void renderSceneA(); // Cilindro
+    void renderSceneB(); // Vacía
+    void renderSceneC(); // Vacía
+
+
+    // Default constructors and destructor
+    cgvScene3D ();
+    ~cgvScene3D ();
 
     // Methods
-    // Method with OpenGL calls to display the scene
-    void display(int scene);
+    // Method with OpenGL calls to visualise the scene
+    void display();
 
-    bool get_axes();
+    bool get_axes ();
 
-    void set_axes(bool _axes);
+    void set_axes ( bool _axes );
 
-    void shoeBox();
+    //Section A: methods to increase angles
+    cgvTriangleMesh* getMesh() const
+    {
+        return mesh;
+    }
 
-    void incrStacksX();
+    void incrX(){
+        rotX+= 10;
+    }
 
-    void decrStacksX();
+    void incrY(){
+        rotY += 10;
+    }
 
-    void incrStacksY();
+    void incrZ(){
+        rotZ += 10;
+    }
 
-    void decrStacksY();
+    //Methods to decrease the angle
+    void decrX() {
+        rotX -= 10;
+    }
 
-    void incrStacksZ();
+    void decrY() {
+        rotY -= 10;
+    }
 
-    void decrStacksZ();
+    void decrZ() {
+        rotZ -= 10;
+    }
 
-    void drawGun();
+    // Section A: methods to obtain angle values
+    double getRotX() const;
 
-    void drawLock();
+    void setRotX(double rotX);
 
-    void drawWooper();
+    double getRotY() const;
 
-    void applyTranslation(float dx, float dy, float dz);
+    void setRotY(double rotY);
 
-    void applyRotation(float dx, float dy, float dz);
+    double getRotZ() const;
 
-    void applyScaling(float factor);
-
-    void renderSceneContent(int scene);
-
-
+    void setRotZ(double rotZ);
 
 private:
-    void renderSceneA();
-
-    void renderSceneB();
-
-    void renderSceneC();
-
-    void paint_axes();
-
+    void paint_axes ();
 };
 
-#endif   // __IGVESCENA3D
+#endif   // __CGVSCENE3D
+

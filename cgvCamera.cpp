@@ -1,181 +1,130 @@
-#if defined(__APPLE__) && defined(__MACH__)
-
-#include <GLUT/glut.h>
-
-#include <OpenGL/gl.h>
-
-#include <OpenGL/glu.h>
-
-#else
-
-#include <GL/glut.h>
-
-#endif
-
+//#include <GL/glut.h>
 #include <math.h>
-#include <stdio.h>
 
 #include "cgvCamera.h"
+
+
 // Constructor methods
-cgvCamera::cgvCamera() {}
 
-cgvCamera::~cgvCamera() {}
+/**
+ * Parameterised constructor
+ * @param _type Camera type (IGV_PARALLEL, IGV_FRUSTUM or IGV_PERSPECTIVE)
+ * @param _P0 Camera position (viewpoint)
+ * @param _r Point at which the camera is looking (reference point)
+ * @param _V Vector indicating the vertical
+ * @pre It is assumed that all parameters have valid values
+ * @post The attributes of the new camera will be the same as the parameters that are
+ *       passed to it
+ */
+cgvCamera::cgvCamera ( CameraType _type, cgvPoint3D _P0, cgvPoint3D _r
+   , cgvPoint3D _V ): P0 ( _P0 ), r ( _r ), V ( _V )
+                      , type ( _type )
+{ }
 
-cgvCamera::cgvCamera(cameraType _type, cgvPoint3D _P0, cgvPoint3D _r, cgvPoint3D _V) {
-    P0 = _P0;
-    r = _r;
-    V = _V;
-
-    type = _type;
+// Public methods
+/**
+ * Defines the position of the camera
+ * @param _P0 Position of the camera (viewpoint)
+ * @param _r Point at which the camera is looking (reference point)
+ * @param _V Vector indicating the vertical
+ * @pre All parameters are assumed to have valid values
+ * @post The camera attributes change to the values passed as parameters
+ */
+void cgvCamera::set ( cgvPoint3D _P0, cgvPoint3D _r, cgvPoint3D _V )
+{  P0 = _P0;
+   r  = _r;
+   V  = _V;
 }
 
-void cgvCamera::set(cgvPoint3D _P0, cgvPoint3D _r, cgvPoint3D _V) {
-    P0 = _P0;
-    r = _r;
-    V = _V;
+
+/**
+ * Defines a parallel or frustum camera type.
+ * @param _type Camera type (IGV_PARALLEL or IGV_FRUSTUM)
+ * @param _P0 Camera position
+ * @param _r Point at which the camera is looking
+ * @param _V Vector indicating the vertical
+ * @param _xwmin Minimum X coordinate of the frustum
+ * @param _xwmax Maximum X coordinate of the frustum
+ * @param _ywmin Minimum Y coordinate of the frustum
+ * @param _ywmax Maximum Y coordinate of the frustum
+ * @param _znear Distance from the camera to the near Z plane
+ * @param _zfar Distance from the camera to the far Z plane
+ * @pre It is assumed that all parameters have valid values
+ * @post The camera attributes change to the values passed as parameters
+ */
+void cgvCamera::set ( CameraType _type, cgvPoint3D _P0, cgvPoint3D _r
+   , cgvPoint3D _V, double _xwmin, double _xwmax, double _ywmin
+   , double _ywmax, double _znear, double _zfar )
+{  type = _type;
+
+   P0 = _P0;
+   r  = _r;
+   V  = _V;
+
+   xwmin = _xwmin;
+   xwmax = _xwmax;
+   ywmin = _ywmin;
+   ywmax = _ywmax;
+   znear = _znear;
+   zfar  = _zfar;
 }
 
-void cgvCamera::set(cameraType _type, cgvPoint3D _P0, cgvPoint3D _r, cgvPoint3D _V,
-                    double _xwmin, double _xwmax, double _ywmin, double _ywmax, double _znear, double _zfar) {
-    type = _type;
+/**
+ * Defines a perspective camera
+ * @param _type Camera type (IGV_PERSPECTIVE)
+ * @param _P0 Camera position
+ * @param _r Point at which the camera is looking
+ * @param _V Vector indicating the vertical
+ * @param _angle Angle of aperture
+ * @param _raspecto Aspect ratio
+ * @param _znear Distance from the camera to the Z near plane
+ * @param _zfar Distance from the camera to the Z far plane
+ * @pre All parameters are assumed to have valid values
+ * @post The camera attributes change to the values passed as
+ *       parameters
+ */
+void cgvCamera::set ( CameraType _type, cgvPoint3D _P0, cgvPoint3D _r
+   , cgvPoint3D _V, double _angle, double _aspectRatio
+   , double _znear, double _zfar )
+{  type = _type;
 
-    P0 = _P0;
-    r = _r;
-    V = _V;
+   P0 = _P0;
+   r  = _r;
+   V  = _V;
 
-    xwmin = _xwmin;
-    xwmax = _xwmax;
-    ywmin = _ywmin;
-    ywmax = _ywmax;
-    znear = _znear;
-    zfar = _zfar;
+   angle   = _angle;
+   aspect = _aspectRatio;
+   znear    = _znear;
+   zfar     = _zfar;
 }
 
-void cgvCamera::set(cameraType _tipo, cgvPoint3D _P0, cgvPoint3D _r, cgvPoint3D _V,
-                    double _angulo, double _raspecto, double _znear, double _zfar) {
-    type = _tipo;
+/**
+ * Applies the view transformation and projection transformation associated with the camera parameters to the objects in the scene.
+ */
+void cgvCamera::apply(void)
+{  glMatrixMode(GL_PROJECTION);
+   glLoadIdentity();
 
-    P0 = _P0;
-    r = _r;
-    V = _V;
+   if ( type == CGV_PARALLEL )
+   {  glOrtho ( xwmin, xwmax, ywmin, ywmax, znear, zfar );
+   }
+   if ( type == CGV_FRUSTUM )
+   {  glFrustum ( xwmin, xwmax, ywmin, ywmax, znear, zfar );
+   }
+   if ( type == CGV_PERSPECTIVE )
+   {  gluPerspective ( angle, aspect, znear, zfar );
+   }
 
-    angle = _angulo;
-    aspect = _raspecto;
-    znear = _znear;
-    zfar = _zfar;
+   glMatrixMode ( GL_MODELVIEW );
+   glLoadIdentity ();
+   gluLookAt ( P0[X], P0[Y], P0[Z], r[X], r[Y], r[Z], V[X], V[Y], V[Z] );
 }
 
-void cgvCamera::apply(void) {
-
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-
-    if (type == CGV_PARALLEL) {
-        glOrtho(xwmin, xwmax, ywmin, ywmax, znear, zfar);
-    }
-    if (type == CGV_FRUSTRUM) {
-        glFrustum(xwmin, xwmax, ywmin, ywmax, znear, zfar);
-    }
-    if (type == CGV_PERSPECTIVE) {
-        gluPerspective(angle, aspect, znear, zfar);
-    }
-
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    gluLookAt(P0[X], P0[Y], P0[Z], r[X], r[Y], r[Z], V[X], V[Y], V[Z]);
-}
-
-void cgvCamera::zoom(double factor) {
-    if (type == CGV_PARALLEL || type == CGV_FRUSTRUM)
-    {
-        xwmin *= factor;
-        xwmax *= factor;
-        ywmin *= factor;
-        ywmax *= factor;
-    }
-    else
-    {
-        if (angle * factor < 180.0)
-        {
-            angle *= factor;
-        }
-    }
-}
-
-void cgvCamera::toggleInteractive() {
-    interactiveMode = !interactiveMode;
-    if (interactiveMode) {
-        // inicializamos parámetros si es la primera vez
-        // Vector desde la cámara (P0) hacia el punto de mira (r)
-        cgvPoint3D dir(r[X] - P0[X], r[Y] - P0[Y], r[Z] - P0[Z]);
-        radius = sqrt(dir[X]*dir[X] + dir[Y]*dir[Y] + dir[Z]*dir[Z]); // Distancia entre cámara y el punto que mira → radio de la órbita
-        orbitAngleY = atan2(P0[X], P0[Z]); //Te devuelve ne que cuadrante está y asi se puede mover orbital en "all" el alrededor
-        pitchAngle = asin(P0[Y] / radius); //ArcoSeno para sacar el angulo
-        selfRotY = 0.0;
-    }
-}
-
-void cgvCamera::orbit(double delta) {
-    orbitAngleY += delta;
-    updatePosition();
-}
-
-void cgvCamera::pitch(double delta) {
-    // Modificamos el ángulo de pitch
-    pitchAngle += delta;
-
-    // Capamos el pitcheo entre -90º y +90º (en radianes) para que funcione como la camara de un videojuego y no se pueda dar la vuelta 360 y maree al jugador 🤓☝
-    const double limit = M_PI / 2.0;
-    if (pitchAngle > limit) pitchAngle = limit;
-    if (pitchAngle < -limit) pitchAngle = -limit;
-
-    updatePosition();
-}
-
-void cgvCamera::rotateY(double delta) {
-    selfRotY += delta;
-    updatePosition();
-}
-
-void cgvCamera::updatePosition() {
-    // calculamos posición orbital alrededor del origen
-    double x = radius * cos(pitchAngle) * sin(orbitAngleY);
-    double y = radius * sin(pitchAngle);
-    double z = radius * cos(pitchAngle) * cos(orbitAngleY);
-
-    P0 = cgvPoint3D(x, y, z);
-    r = cgvPoint3D(0, 0, 0); // siempre mira al origen
-    V = cgvPoint3D(0, 1, 0);
-
-    // rotación local sobre Y
-    if (fabs(selfRotY) > 0) {
-        double cosA = cos(selfRotY);
-        double sinA = sin(selfRotY);
-
-        // rotamos el punto de vista en torno al eje Y local
-        cgvPoint3D dir(r[X] - P0[X], r[Y] - P0[Y], r[Z] - P0[Z]);
-        double newX = dir[X] * cosA + dir[Z] * sinA;
-        double newZ = -dir[X] * sinA + dir[Z] * cosA;
-        r = cgvPoint3D(P0[X] + newX, P0[Y] + dir[Y], P0[Z] + newZ);
-    }
-    apply();
-}
-
-void cgvCamera::moveNear(double delta) {
-    znear += delta;
-    if (znear < 0.1) { // Evitar valores negativos
-        znear = 0.1;
-    }
-    if (znear >= zfar - 0.1) { // Evitar que se pase del zfar
-        znear = zfar - 0.1;
-    }
-    apply();
-}
-
-void cgvCamera::moveFar(double delta) {
-    zfar += delta;
-    if (zfar <= znear + 0.5) { // Evitar que se meta más dentro del znear
-        zfar = znear + 0.5;
-    }
-    apply();
-}
+/**
+ * Zooms in on the camera.
+ * @param factor Factor (as a percentage of 100) applied to the zoom. If the value is
+ *        positive, the zoom is increased. If it is negative, it is reduced.
+ * @pre It is assumed that the parameter has a valid value
+ */
+void cgvCamera::zoom ( double factor )
+{ }
