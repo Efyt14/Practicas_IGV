@@ -17,6 +17,12 @@ cgvScene3D::cgvScene3D ()
     mesh = new cgvCylinder(1.0f, 1.0f, 40, 2);
     axes = true;
     rotX = rotY = rotZ = 0.0f;
+
+    // TODO: Initialize attributes for controlling the model's degrees of freedom
+    x = 0;
+    y = 0;
+    z = 0;
+    z2 = 0;
 }
 
 /**
@@ -59,6 +65,132 @@ void cgvScene3D::paint_axes()
    glEnd();
 }
 
+void cgvScene3D::paintCube() {
+    //FIXME buscar marron oscuro muy oscuro
+    GLfloat color_cube[] = {0.35, 0.16, 0.14};
+
+    glMaterialfv(GL_FRONT, GL_EMISSION, color_cube);
+
+    glBegin(GL_QUADS);
+    glVertex3f(-0.75f, -0.75f, 0.75f);
+    glVertex3f(0.75f, -0.75f, 0.75f);
+    glVertex3f(0.75f, 0.75f, 0.75f);
+    glVertex3f(-0.75f, 0.75f, 0.75f);
+    glEnd();
+
+    glBegin(GL_QUADS);
+    glVertex3f(0.75f, -0.75f, -0.75f);
+    glVertex3f(-0.75f, -0.75f, -0.75f);
+    glVertex3f(-0.75f, 0.75f, -0.75f);
+    glVertex3f(0.75f, 0.75f, -0.75f);
+    glEnd();
+
+    glBegin(GL_QUADS);
+    glVertex3f(-0.75f, -0.75f, -0.75f);
+    glVertex3f(-0.75f, -0.75f, 0.75f);
+    glVertex3f(-0.75f, 0.75f, 0.75f);
+    glVertex3f(-0.75f, 0.75f, -0.75f);
+    glEnd();
+
+    glBegin(GL_QUADS);
+    glVertex3f(0.75f, -0.75f, 0.75f);
+    glVertex3f(0.75f, -0.75f, -0.75f);
+    glVertex3f(0.75f, 0.75f, -0.75f);
+    glVertex3f(0.75f, 0.75f, 0.75f);
+    glEnd();
+
+    glBegin(GL_QUADS);
+    glVertex3f(-0.75f, 0.75f, 0.75f);
+    glVertex3f(0.75f, 0.75f, 0.75f);
+    glVertex3f(0.75f, 0.75f, -0.75f);
+    glVertex3f(-0.75f, 0.75f, -0.75f);
+    glEnd();
+
+    glBegin(GL_QUADS);
+    glVertex3f(0.75f, -0.75f, -0.75f);
+    glVertex3f(0.75f, -0.75f, 0.75f);
+    glVertex3f(-0.75f, -0.75f, 0.75f);
+    glVertex3f(-0.75f, -0.75f, -0.75f);
+    glEnd();
+}
+
+void cgvScene3D::drawMastil(float lenght) {
+    GLUquadricObj* tube;
+    GLfloat mastilColor[] = {0.3,0.3,0.3};
+
+    glMaterialfv(GL_FRONT,GL_EMISSION,mastilColor);
+
+    tube = gluNewQuadric();
+    gluQuadricDrawStyle(tube, GLU_FILL);
+
+    glPushMatrix();
+    glRotated(270,1,0,0);
+    glScalef(1,1,4);
+    gluCylinder(tube, 0.25,0.25,lenght,20,20);
+    glPopMatrix();
+
+    gluDeleteQuadric(tube);
+}
+
+//FIXME va un cuadrado en aplastado
+void cgvScene3D::drawFlag(float lenght) {
+    GLfloat flagColor[] = {1.0,0.0,0.0};
+
+    glMaterialfv(GL_FRONT, GL_EMISSION,flagColor);
+
+    glBegin(GL_QUADS);
+    glVertex3f(-0.75f, -0.75f, 0.75f);
+    glVertex3f(0.75f, -0.75f, 0.75f);
+    glVertex3f(0.75f, 0.75f, 0.75f);
+    glVertex3f(-0.75f, 0.75f, 0.75f);
+    glEnd();
+
+    glBegin(GL_QUADS);
+    glVertex3f(0.75f, -0.75f, -0.75f);
+    glVertex3f(-0.75f, -0.75f, -0.75f);
+    glVertex3f(-0.75f, 0.75f, -0.75f);
+    glVertex3f(0.75f, 0.75f, -0.75f);
+    glEnd();
+
+    glBegin(GL_QUADS);
+    glVertex3f(-0.75f, -0.75f, -0.75f);
+    glVertex3f(-0.75f, -0.75f, 0.75f);
+    glVertex3f(-0.75f, 0.75f, 0.75f);
+    glVertex3f(-0.75f, 0.75f, -0.75f);
+    glEnd();
+
+    glBegin(GL_QUADS);
+    glVertex3f(0.75f, -0.75f, 0.75f);
+    glVertex3f(0.75f, -0.75f, -0.75f);
+    glVertex3f(0.75f, 0.75f, -0.75f);
+    glVertex3f(0.75f, 0.75f, 0.75f);
+    glEnd();
+
+    glBegin(GL_QUADS);
+    glVertex3f(-0.75f, 0.75f, 0.75f);
+    glVertex3f(0.75f, 0.75f, 0.75f);
+    glVertex3f(0.75f, 0.75f, -0.75f);
+    glVertex3f(-0.75f, 0.75f, -0.75f);
+    glEnd();
+
+    glBegin(GL_QUADS);
+    glVertex3f(0.75f, -0.75f, -0.75f);
+    glVertex3f(0.75f, -0.75f, 0.75f);
+    glVertex3f(-0.75f, -0.75f, 0.75f);
+    glVertex3f(-0.75f, -0.75f, -0.75f);
+    glEnd();
+
+
+}
+
+void cgvScene3D::drawEsferaArmilar(float lenght) {
+    GLfloat esferaColor[] = {1.0,1.0,0.0};
+
+    glMaterialfv(GL_FRONT, GL_EMISSION,esferaColor);
+}
+
+
+
 /**
  * Method with OpenGL calls to visualise the scene
  */
@@ -95,6 +227,14 @@ void cgvScene3D::display( void )
     */
     if (mesh != nullptr)
         mesh->display();
+
+    // TODO: Section B: Here you need to add the model tree display using the OpenGL matrix stack. It is recommended to create a helper method that encapsulates the code for displaying the model, leaving only the call to that method here, as well as different functions, one for each part of the model.
+    glScaled(0.2,0.2,0.2);
+    paintCube();
+    drawMastil(1.5);
+    glScaled(1.5,1,0.2);
+    glTranslatef(0.9,5,0);
+    drawFlag(1.5);
 
    glPopMatrix (); // restores the modelling matrix
 }
@@ -144,14 +284,12 @@ void cgvScene3D::setRotZ(double rotZ) {
 
 
 //ESCENAS
+// --- ESCENA A ---
 void cgvScene3D::renderSceneA()
 {
     if (mesh != nullptr) delete mesh;
-
     mesh = new cgvCylinder(1.0f, 1.0f, 40, 2);
-
     axes = true;
-
     glutPostRedisplay();
 }
 
@@ -164,6 +302,10 @@ void cgvScene3D::renderSceneB()
     }
 
     axes = true;
+    paintCube();
+    drawMastil(1.5);
+    drawFlag(1);
+    drawMastil(1);
     glutPostRedisplay();
 }
 

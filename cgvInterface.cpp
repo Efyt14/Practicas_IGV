@@ -112,6 +112,7 @@ void cgvInterface::keyboardFunc(unsigned char key, int x, int y)
         case 'Z': // Section C: rotate negative Z
             _instance->scene.decrZ();
             break;
+            //FIXME que solamente se puedan tocar cuando esta en scene A
         case 'n':
             _instance->scene.getMesh()->changeNormal();
             break;
@@ -124,6 +125,33 @@ void cgvInterface::keyboardFunc(unsigned char key, int x, int y)
         case 'G':
             _instance->scene.getMesh()->changeShader();
             break;
+        case 'b':
+            _instance->scene. rotateBaseY(5);
+            break;
+        case 'B':
+            _instance->scene. rotateBaseY(-5);
+            break;
+        case 'c':
+            _instance->scene. rotateBodyX(5);
+            break;
+        case 'C':
+            _instance->scene. rotateBodyX(-5);
+            break;
+        case 'm':
+            _instance->scene. rotateBodyupZ(5);
+            break;
+        case 'M':
+            _instance->scene. rotateBodyupZ(-5);
+            break;
+        //FIXME cambiar la letra y especificar en el pdf
+            /**
+        case 'n':
+            _instance->scene. rotateArmZ(5);
+            break;
+        case 'N':
+            _instance->scene.rotateArmZ(-5);
+            break;
+            */
 
         case 'e': // activate/deactivate the display of the axes
             _instance->scene.set_axes ( !_instance->scene.get_axes () );
@@ -173,12 +201,21 @@ void cgvInterface::displayFunc ()
 }
 
 /**
+* Method to animate the scene
+*/
+void cgvInterface::idleFunc()
+{
+    // TODO: Section D: Include code to animate the model as realistically as possible
+}
+
+/**
  * Method to initialise GLUT callbacks
  */
 void cgvInterface::initialize_callbacks ()
 {  glutKeyboardFunc ( keyboardFunc );
    glutReshapeFunc ( reshapeFunc );
    glutDisplayFunc ( displayFunc );
+    glutIdleFunc(idleFunc);
 }
 
 /**
@@ -231,15 +268,15 @@ void cgvInterface::menuHandle(int value)
     switch (value)
     {
         case 1:
-            std::cout << "Menu option 1 selected\n";
+            std::cout << "Menu option 1 selected\n"; //Log pq no me carga
             _instance->scene.renderSceneA();
             break;
         case 2:
-            std::cout << "Menu option 2 selected\n";
+            std::cout << "Menu option 2 selected\n"; //Log pq no me carga
             _instance->scene.renderSceneB();
             break;
         case 3:
-            std::cout << "Menu option 3 selected\n";
+            std::cout << "Menu option 3 selected\n"; //Log pq no me carga
             _instance->scene.renderSceneC();
             break;
     }

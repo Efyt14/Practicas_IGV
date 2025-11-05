@@ -50,6 +50,8 @@ public:
     static void reshapeFunc ( int w, int h ); // Method that defines the camera and viewport
     // called automatically when the window size is changed
     static void displayFunc (); // method for displaying the scene
+    static void idleFunc (); // method to animate the scene
+
 
 
     // Methods

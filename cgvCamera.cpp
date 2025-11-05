@@ -127,4 +127,14 @@ void cgvCamera::apply(void)
  * @pre It is assumed that the parameter has a valid value
  */
 void cgvCamera::zoom ( double factor )
-{ }
+{
+   double aux = (100 - factor/2)/100;
+   // In the case of a parallel camera and a frustum-generated camera, the zoom factor must be applied to the viewport coordinates
+   xwmin *= aux;
+   xwmax *= aux;
+   ywmin *= aux;
+   ywmax *= aux;
+
+   // In the case of the GLU perspective camera, simply apply the zoom factor to the angle of view: aux = (100 - factor)/100;
+   angle *= aux;
+}

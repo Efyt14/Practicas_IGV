@@ -13,6 +13,17 @@
 
 #include "cgvPoint3D.h"
 
+
+/**
+* Camera views
+*/
+enum poscam
+{ panoramic ///< View from an arbitrary point
+, plan ///< Plan view (camera on the Y axis)
+, profile ///< Profile view (camera on the X axis)
+, elevation ///< Elevation view (camera on the Z axis)
+};
+
 /**
  * Tags for different camera types
  */
@@ -28,13 +39,15 @@ enum CameraType
 class cgvCamera
 {  private:
     // attributes
+    poscam vis = panoramic;      ///< Camera position
+
     CameraType type = CGV_PARALLEL;  ///< Camera type
 
     // view window: parallel projection and frustum parameters
-    GLdouble xwmin = -3    ///< Minimum X coordinate of the frustum/parallel projection
-             , xwmax = 3   ///< Maximum X coordinate of the frustum/parallel projection
-             , ywmin = -3   ///< Minimum Y coordinate of the frustum/parallel projection
-             , ywmax = 3   ///< Maximum Y coordinate of the frustum/parallel projection
+    GLdouble xwmin = -5    ///< Minimum X coordinate of the frustum/parallel projection
+             , xwmax = 5   ///< Maximum X coordinate of the frustum/parallel projection
+             , ywmin = -5   ///< Minimum Y coordinate of the frustum/parallel projection
+             , ywmax = 5   ///< Maximum Y coordinate of the frustum/parallel projection
              ;
 
     // view window: perspective projection parameters
@@ -43,12 +56,12 @@ class cgvCamera
              ;
 
     // distances of near and far planes
-    GLdouble znear = 1    ///< Distance from camera to Z near plane
+    GLdouble znear = 3    ///< Distance from camera to Z near plane
              , zfar = 200 ///< Distance from camera to Z far plane
              ;
 
     // viewpoint
-    cgvPoint3D P0 = { 3, 2, 4 };   ///< Camera position
+    cgvPoint3D P0 = { 6, 4, 8 };   ///< Camera position
 
     // viewing reference point
     cgvPoint3D r = { 0, 0, 0 };   ///< Point at which the camera is looking
