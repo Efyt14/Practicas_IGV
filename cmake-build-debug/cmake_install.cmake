@@ -1,8 +1,8 @@
-# Install script for directory: C:/Users/usuariopc/Desktop/Colegio/Uni/3º/1º/IGV/Practicas/Practica 2/Practica 2
+# Install script for directory: C:/Users/usuariopc/Desktop/Colegio/Uni/3º/1º/IGV/Practicas/Practica 2/pr2a_conan/pr2a_conan
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "C:/Program Files (x86)/pr1")
+  set(CMAKE_INSTALL_PREFIX "C:/Program Files (x86)/pr2a_conan")
 endif()
 string(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
@@ -45,5 +45,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "C:/Users/usuariopc/Desktop/Colegio/Uni/3º/1º/IGV/Practicas/Practica 2/Practica 2/cmake-build-debug/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "C:/Users/usuariopc/Desktop/Colegio/Uni/3º/1º/IGV/Practicas/Practica 2/pr2a_conan/pr2a_conan/cmake-build-debug/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

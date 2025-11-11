@@ -1,3 +1,3 @@
-C:/Users/usuariopc/Desktop/Colegio/Uni/3º/1º/IGV/Practicas/Practica 2/Practica 2/cmake-build-debug/CMakeFiles/pr1.dir
-C:/Users/usuariopc/Desktop/Colegio/Uni/3º/1º/IGV/Practicas/Practica 2/Practica 2/cmake-build-debug/CMakeFiles/edit_cache.dir
-C:/Users/usuariopc/Desktop/Colegio/Uni/3º/1º/IGV/Practicas/Practica 2/Practica 2/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+C:/Users/usuariopc/Desktop/Colegio/Uni/3º/1º/IGV/Practicas/Practica 2/pr2a_conan/pr2a_conan/cmake-build-debug/CMakeFiles/pr2a_conan.dir
+C:/Users/usuariopc/Desktop/Colegio/Uni/3º/1º/IGV/Practicas/Practica 2/pr2a_conan/pr2a_conan/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/usuariopc/Desktop/Colegio/Uni/3º/1º/IGV/Practicas/Practica 2/pr2a_conan/pr2a_conan/cmake-build-debug/CMakeFiles/rebuild_cache.dir

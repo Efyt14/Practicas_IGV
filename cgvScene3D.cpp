@@ -1,442 +1,452 @@
+#include <cstdlib>
+#include <stdio.h>
+#include <cmath>
+#include <cgvCylinder.h>
+
 #include "cgvScene3D.h"
+#include "cgvTriangleMesh.h"
 
 
-// Constructor: inicializa transforms y modo
-cgvScene3D::cgvScene3D() {
-    modeRST = true;
-    deferredMode = false;
-    selected = 0;
+// Constructor methods
 
-    for (int i=0; i<3; i++) {
-        transforms[i] = {0,0,0, 0,0,0, 1};
-        ops[i].clear();
-    }
+/**
+ * Default constructor
+ */
+cgvScene3D::cgvScene3D ()
+{  //Section B: Insert code to create a cylinder
+    mesh = new cgvCylinder(1.0f, 1.0f, 40, 2);
+    axes = true;
+    rotX = rotY = rotZ = 0.0f;
+
+    currentScene = 2;
+
+    // TODO: Initialize attributes for controlling the model's degrees of freedom
+    x = 0;
+    y = 0;
+    z = 0;
+    z2 = 0;
+
+    objetoSeleccionado = 1;
+    timer = 0.0;
 }
 
 /**
-* Method for painting the coordinate axes by calling OpenGL functions
-*/
-void cgvScene3D::paint_axes ()
-{
-    GLfloat red[] = { 1,0,0,1.0 };
+ * Destructor
+ */
+cgvScene3D::~cgvScene3D ()
+{  if ( mesh != nullptr )
+    {  delete mesh;
+        mesh = nullptr;
+    }
+}
+
+
+// Public methods
+
+/**
+ * Method for painting the coordinate axes by calling OpenGL functions
+ */
+void cgvScene3D::paint_axes()
+{    GLfloat red[] = { 1,0,0,1.0 };
     GLfloat green[] = { 0,1,0,1.0 };
     GLfloat blue[] = { 0,0,1,1.0 };
 
-    glBegin(GL_LINES);
     glMaterialfv(GL_FRONT, GL_EMISSION, red);
+    glBegin(GL_LINES);
     glVertex3f(1000, 0, 0);
     glVertex3f(-1000, 0, 0);
+    glEnd();
 
     glMaterialfv(GL_FRONT, GL_EMISSION, green);
+    glBegin(GL_LINES);
     glVertex3f(0, 1000, 0);
     glVertex3f(0, -1000, 0);
+    glEnd();
 
     glMaterialfv(GL_FRONT, GL_EMISSION, blue);
+    glBegin(GL_LINES);
     glVertex3f(0, 0, 1000);
     glVertex3f(0, 0, -1000);
     glEnd();
 }
 
-void cgvScene3D::shoeBox() {
-    GLfloat part_color[] = { 0,0.25,0 };
-    GLfloat part_color2[] = { 0,0.3,0 };
+void cgvScene3D::paintCube() {
+    //FIXME buscar marron oscuro muy oscuro
+    GLfloat color_cube[] = {0.35, 0.16, 0.14};
 
-    glMaterialfv(GL_FRONT, GL_EMISSION, part_color);
+    glMaterialfv(GL_FRONT, GL_EMISSION, color_cube);
+
+    glBegin(GL_QUADS);
+    glVertex3f(-0.75f, -0.75f, 0.75f);
+    glVertex3f(0.75f, -0.75f, 0.75f);
+    glVertex3f(0.75f, 0.75f, 0.75f);
+    glVertex3f(-0.75f, 0.75f, 0.75f);
+    glEnd();
+
+    glBegin(GL_QUADS);
+    glVertex3f(0.75f, -0.75f, -0.75f);
+    glVertex3f(-0.75f, -0.75f, -0.75f);
+    glVertex3f(-0.75f, 0.75f, -0.75f);
+    glVertex3f(0.75f, 0.75f, -0.75f);
+    glEnd();
+
+    glBegin(GL_QUADS);
+    glVertex3f(-0.75f, -0.75f, -0.75f);
+    glVertex3f(-0.75f, -0.75f, 0.75f);
+    glVertex3f(-0.75f, 0.75f, 0.75f);
+    glVertex3f(-0.75f, 0.75f, -0.75f);
+    glEnd();
+
+    glBegin(GL_QUADS);
+    glVertex3f(0.75f, -0.75f, 0.75f);
+    glVertex3f(0.75f, -0.75f, -0.75f);
+    glVertex3f(0.75f, 0.75f, -0.75f);
+    glVertex3f(0.75f, 0.75f, 0.75f);
+    glEnd();
+
+    glBegin(GL_QUADS);
+    glVertex3f(-0.75f, 0.75f, 0.75f);
+    glVertex3f(0.75f, 0.75f, 0.75f);
+    glVertex3f(0.75f, 0.75f, -0.75f);
+    glVertex3f(-0.75f, 0.75f, -0.75f);
+    glEnd();
+
+    glBegin(GL_QUADS);
+    glVertex3f(0.75f, -0.75f, -0.75f);
+    glVertex3f(0.75f, -0.75f, 0.75f);
+    glVertex3f(-0.75f, -0.75f, 0.75f);
+    glVertex3f(-0.75f, -0.75f, -0.75f);
+    glEnd();
+}
+
+void cgvScene3D::drawMastil(float lenght) {
+    GLUquadricObj* tube;
+    GLfloat mastilColor[] = {0.3,0.3,0.3};
+
+    glMaterialfv(GL_FRONT,GL_EMISSION,mastilColor);
+
+    tube = gluNewQuadric();
+    gluQuadricDrawStyle(tube, GLU_FILL);
 
     glPushMatrix();
-    glScalef(1, 1, 2);
-    glutSolidCube(1);
+    glRotated(270,1,0,0);
+    glScalef(1,1,4);
+    gluCylinder(tube, 0.25,0.25,lenght,20,20);
     glPopMatrix();
 
-    glMaterialfv(GL_FRONT, GL_EMISSION, part_color2);
+    gluDeleteQuadric(tube);
+}
+
+
+void cgvScene3D::drawEsferaArmilar(float lenght) {
+    GLfloat esferaColor[] = {1.0,1.0,0.0};
+
+    glMaterialfv(GL_FRONT, GL_EMISSION,esferaColor);
+
     glPushMatrix();
-    glTranslatef(0, 0.4, 0);
-    glScalef(1.1, 0.2, 2.1);
-    glutSolidCube(1);
+    glTranslatef(0.0,6,0.0);
+    glutSolidSphere(lenght, 25,25);
     glPopMatrix();
 }
 
-void cgvScene3D::incrStacksX() {
-    nStacksX++;
-};
+void cgvScene3D::drawFlag(float lenght) {
+    GLfloat flagColor[] = {1.0,0.0,0.0};
 
-void cgvScene3D::decrStacksX() {
-    if (nStacksX > 1)
-        nStacksX--;
-};
+    glMaterialfv(GL_FRONT, GL_EMISSION,flagColor);
 
-void cgvScene3D::incrStacksY() {
-    nStacksY++;
-};
+    glBegin(GL_QUADS);
+    glVertex3f(-0.75f, -0.75f, 0.75f);
+    glVertex3f(0.75f, -0.75f, 0.75f);
+    glVertex3f(0.75f, 0.75f, 0.75f);
+    glVertex3f(-0.75f, 0.75f, 0.75f);
+    glEnd();
 
-void cgvScene3D::decrStacksY() {
-    if (nStacksY > 1)
-        nStacksY--;
-};
+    glBegin(GL_QUADS);
+    glVertex3f(0.75f, -0.75f, -0.75f);
+    glVertex3f(-0.75f, -0.75f, -0.75f);
+    glVertex3f(-0.75f, 0.75f, -0.75f);
+    glVertex3f(0.75f, 0.75f, -0.75f);
+    glEnd();
 
-void cgvScene3D::incrStacksZ() {
-    nStacksZ++;
-};
+    glBegin(GL_QUADS);
+    glVertex3f(-0.75f, -0.75f, -0.75f);
+    glVertex3f(-0.75f, -0.75f, 0.75f);
+    glVertex3f(-0.75f, 0.75f, 0.75f);
+    glVertex3f(-0.75f, 0.75f, -0.75f);
+    glEnd();
 
-void cgvScene3D::decrStacksZ() {
-    if (nStacksZ > 1)
-        nStacksZ--;
-};
+    glBegin(GL_QUADS);
+    glVertex3f(0.75f, -0.75f, 0.75f);
+    glVertex3f(0.75f, -0.75f, -0.75f);
+    glVertex3f(0.75f, 0.75f, -0.75f);
+    glVertex3f(0.75f, 0.75f, 0.75f);
+    glEnd();
+
+    glBegin(GL_QUADS);
+    glVertex3f(-0.75f, 0.75f, 0.75f);
+    glVertex3f(0.75f, 0.75f, 0.75f);
+    glVertex3f(0.75f, 0.75f, -0.75f);
+    glVertex3f(-0.75f, 0.75f, -0.75f);
+    glEnd();
+
+    glBegin(GL_QUADS);
+    glVertex3f(0.75f, -0.75f, -0.75f);
+    glVertex3f(0.75f, -0.75f, 0.75f);
+    glVertex3f(-0.75f, -0.75f, 0.75f);
+    glVertex3f(-0.75f, -0.75f, -0.75f);
+    glEnd();
+}
+
+//TODO diamante aka, cuadrado aplastado y rotado jaja lol
+void cgvScene3D::drawLogo(float lenght) {
+    GLfloat flagColor[] = {0.3,0.3,0.3};
+
+    glMaterialfv(GL_FRONT, GL_EMISSION,flagColor);
+
+    glBegin(GL_QUADS);
+    glVertex3f(-0.75f, -0.75f, 0.75f);
+    glVertex3f(0.75f, -0.75f, 0.75f);
+    glVertex3f(0.75f, 0.75f, 0.75f);
+    glVertex3f(-0.75f, 0.75f, 0.75f);
+    glEnd();
+
+    glBegin(GL_QUADS);
+    glVertex3f(0.75f, -0.75f, -0.75f);
+    glVertex3f(-0.75f, -0.75f, -0.75f);
+    glVertex3f(-0.75f, 0.75f, -0.75f);
+    glVertex3f(0.75f, 0.75f, -0.75f);
+    glEnd();
+
+    glBegin(GL_QUADS);
+    glVertex3f(-0.75f, -0.75f, -0.75f);
+    glVertex3f(-0.75f, -0.75f, 0.75f);
+    glVertex3f(-0.75f, 0.75f, 0.75f);
+    glVertex3f(-0.75f, 0.75f, -0.75f);
+    glEnd();
+
+    glBegin(GL_QUADS);
+    glVertex3f(0.75f, -0.75f, 0.75f);
+    glVertex3f(0.75f, -0.75f, -0.75f);
+    glVertex3f(0.75f, 0.75f, -0.75f);
+    glVertex3f(0.75f, 0.75f, 0.75f);
+    glEnd();
+
+    glBegin(GL_QUADS);
+    glVertex3f(-0.75f, 0.75f, 0.75f);
+    glVertex3f(0.75f, 0.75f, 0.75f);
+    glVertex3f(0.75f, 0.75f, -0.75f);
+    glVertex3f(-0.75f, 0.75f, -0.75f);
+    glEnd();
+
+    glBegin(GL_QUADS);
+    glVertex3f(0.75f, -0.75f, -0.75f);
+    glVertex3f(0.75f, -0.75f, 0.75f);
+    glVertex3f(-0.75f, -0.75f, 0.75f);
+    glVertex3f(-0.75f, -0.75f, -0.75f);
+    glEnd();
+
+}
+
+
 
 /**
-* Method with OpenGL calls to display the scene
-* @param scene Identifier of the scene type to draw
-* @pre Assumes the parameter value is correct
-*/
-void cgvScene3D::display(int scene)
+ * Method with OpenGL calls to visualise the scene
+ */
+void cgvScene3D::display( void )
 {
-    // clear the window and Z-buffer
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    GLfloat mesh_colour[] = { 0, 0.25, 0 };
+    // create lights   // point light to display the cube
+    GLfloat light0[4] = { 2.0, 2.5, 3.0, 1 };
 
-    // Lights
-    GLfloat light0[] = { 10, 8, 9, 1 }; // point light source
-    glLightfv(GL_LIGHT0, GL_POSITION, light0);
+    // the light is placed here if it remains fixed and does not move with the scene
+    glLightfv ( GL_LIGHT0, GL_POSITION, light0 );
     glEnable(GL_LIGHT0);
 
-    glPushMatrix(); // save the modeling matrix
+    // create the model
+    glPushMatrix(); // save the modelling matrix
 
     // paint the axes
-    if(axes)
-    { paint_axes();
-    }
+    if (axes) paint_axes();
 
-    // Scene selected via the menu (right-click)
-    if(scene == SceneA)
-    { renderSceneA();
-    }
-    else
-    { if ( scene == SceneB )
-        { renderSceneB();
-        }
-        else
-        { if ( scene == SceneC )
-            { renderSceneC();
-            }
-        }
-    }
+    // create the model
+    glRotatef(rotX, 1, 0, 0);
+    glRotatef(rotY, 0, 1, 0);
+    glRotatef(rotZ, 0, 0, 1);
 
-    glPopMatrix();
-    glutSwapBuffers();
+    // the light is placed here if it moves with the scene
+    glLightfv(GL_LIGHT0,GL_POSITION,light0);
+    glMaterialfv ( GL_FRONT, GL_EMISSION, mesh_colour );
+
+    // Section B: the following call must be replaced by the call to the mesh visualisation method
+    /*GLUquadric *cyl = gluNewQuadric ();
+    gluCylinder ( cyl, 1, 1, 1, 20, 5 );
+    gluDeleteQuadric ( cyl );
+    cyl = nullptr;
+     */
+    switch (currentScene)
+    {
+        case 1: // Escena A
+            if (mesh != nullptr)
+                mesh->display();
+            break;
+
+        case 2: // Escena B
+            //Objeto 1
+
+            glScaled(0.2, 0.2, 0.2);
+
+            glPushMatrix();
+            drawWooper();
+            glPopMatrix();
+
+
+            glPushMatrix();
+            glTranslatef(-5, 0, 0); // Posiciona  el conjunto de la bandera
+
+            glRotatef(baseRotY, 0, 1, 0);
+            // --- 1. Base (Cubo) ---
+            glPushMatrix();
+            paintCube();
+            glPopMatrix();
+
+            // --- 2. Esfera Armilar (Estática, Hija de la Base) ---
+            glPushMatrix();
+            drawEsferaArmilar(0.4);
+            glPopMatrix();
+
+            // --- 3. Mástil (Hijo de la Base) ---
+            glPushMatrix();
+            glRotatef(mastilRotY, 0, 1, 0); // <-- GRADO DE LIBERTAD (Mástil)
+            drawMastil(1.5);
+
+
+            // --- 3.1. Bandera (Hija del Mástil) ---
+                glPushMatrix();
+                glTranslatef(0, banderaPosY, 0); // <-- GRADO DE LIBERTAD (Bandera)
+
+                glScaled(1.5, 1, 0.2);
+                glTranslatef(0.9, 5, 0);
+                drawFlag(1.5);
+
+                // --- 3.1.1. Logo (Hijo de la Bandera) ---
+                    glPushMatrix();
+                    glScaled(0.3, 0.45, 1);
+                    glTranslatef(0, 0, 0.2);
+                    glRotated(45, 0, 0, 1);
+
+                    glRotatef(logoRotZ, 0, 0, 1); // <-- GRADO DE LIBERTAD (Logo)
+
+                    drawLogo(1);
+                    glPopMatrix(); // Fin Logo
+                glPopMatrix(); // Fin Bandera
+            glPopMatrix(); // Fin Mástil
+            glPopMatrix(); // Fin conjunto de la bandera
+            break;
+
+        case 3: // Escena C
+            break;
+    }
+    glPopMatrix (); // restores the modelling matrix
 }
-/**
-* Renders scene A by calling OpenGL functions
 
+/**
+ * Method to check whether the axes should be drawn or not
+ * @retval true If the axes should be drawn
+ * @retval false If the axes should not be drawn
+ */
+bool cgvScene3D::get_axes ()
+{  return axes;
+}
+
+/**
+ * Method to enable or disable the drawing of the axes
+ * @param axes Indicates whether to draw the axes (true) or not (false)
+ * @post The status of the object changes with regard to drawing axes,
+ *       according to the value passed as a parameter
+ */
+void cgvScene3D::set_axes ( bool axes )
+{  this->axes = axes; //Arreglado
+}
+
+double cgvScene3D::getRotX() const {
+    return rotX;
+}
+
+void cgvScene3D::setRotX(double rotX) {
+    cgvScene3D::rotX = rotX;
+}
+
+double cgvScene3D::getRotY() const {
+    return rotY;
+}
+
+void cgvScene3D::setRotY(double rotY) {
+    cgvScene3D::rotY = rotY;
+}
+
+double cgvScene3D::getRotZ() const {
+    return rotZ;
+}
+
+void cgvScene3D::setRotZ(double rotZ) {
+    cgvScene3D::rotZ = rotZ;
+}
+
+
+//ESCENAS
+// --- ESCENA A ---
 void cgvScene3D::renderSceneA()
 {
-    shoeBox();
+    currentScene = 1;
+    if (mesh != nullptr) delete mesh;
+    mesh = new cgvCylinder(1.0f, 1.0f, 40, 2);
+    axes = true;
+    glutPostRedisplay();
 }
-*/
 
-
-/**
-* Paints scene B by calling OpenGL functions
-
-*/
-/**
-void cgvScene3D::renderSceneB ()
+// --- ESCENA B ---
+void cgvScene3D::renderSceneB()
 {
-    GLfloat piece_color[] = { 0, 0, 0.5 };
-
-    glMaterialfv(GL_FRONT, GL_EMISSION, piece_color);
-    for (int yStack = 0; yStack < nStacksY; yStack++) {
-        glPushMatrix();
-        glTranslatef(0, yStack, 0);
-        shoeBox();
-        glPopMatrix();
+    currentScene = 2;
+    if (mesh != nullptr) {
+        delete mesh;
+        mesh = nullptr;
     }
+
+    axes = true;
+    glutPostRedisplay();
 }
-*/
 
-/**
-* Paints scene C by calling OpenGL functions
- */
-
-/**
-void cgvScene3D::renderSceneC ()
+// --- ESCENA C ---
+void cgvScene3D::renderSceneC()
 {
-    GLfloat part_color[] = { 0,0,0.5 };
-    GLfloat xSeparation = 1.5;
-    GLfloat zSeparation = 2.5;
-
-    glMaterialfv(GL_FRONT, GL_EMISSION, part_color);
-    for (int yStacks = 0; yStacks < nStacksY; yStacks++) {
-        for (int xStacks = 0; xStacks < nStacksX; xStacks++) {
-            for (int zStacks = 0; zStacks < nStacksZ; zStacks++) {
-                glPushMatrix();
-                glTranslatef(xStacks * xSeparation, yStacks, zStacks * zSeparation);
-                shoeBox();
-                glPopMatrix();
-            }
-        }
-    }
-}
-*/
-
-void cgvScene3D::renderSceneA(){
-    glScalef(2.0f,2.0f,2.0f);
-    //Rotaciones para ver que me ha quedado de todos los lados bien
-    //glRotated(90,0,0,0);
-    glPushMatrix();
-    // apply transforms for object 0 (SceneA)
-    Transform &t = transforms[0];
-    if (modeRST) {
-    // To achieve application order R then S then T on the object, we call the GL functions in the order: Translate, Scale, Rotate.
-        glTranslatef(t.tx, t.ty, t.tz);
-        glScalef(t.s, t.s, t.s);
-    // apply rotations so that X rotation happens first, then Y, then Z
-        glRotatef(t.rz, 0.0f, 0.0f, 1.0f);
-        glRotatef(t.ry, 0.0f, 1.0f, 0.0f);
-        glRotatef(t.rx, 1.0f, 0.0f, 0.0f);
-    } else {
-    // apply operations in the order they were recorded
-        for (std::function<void()>& op : ops[0]) {
-            op();
-        }
-    }
-    drawGun();
-    glPopMatrix();
-}
-
-void cgvScene3D::renderSceneB(){
-    //Rotaciones para ver que me ha quedado de todos los lados bien
-    //glRotated(90,0,1,0);
-    glPushMatrix();
-    Transform &t = transforms[1];
-    if (modeRST) {
-        glTranslatef(t.tx, t.ty, t.tz);
-        glScalef(t.s, t.s, t.s);
-        glRotatef(t.rz, 0.0f, 0.0f, 1.0f);
-        glRotatef(t.ry, 0.0f, 1.0f, 0.0f);
-        glRotatef(t.rx, 1.0f, 0.0f, 0.0f);
-    } else {
-        for (std::function<void()>& op : ops[1]) {
-            op();
-        }
-    }
-    drawLock();
-    glPopMatrix();}
-
-void cgvScene3D::renderSceneC() {
-    //Rotaciones para ver que me ha quedado de todos los lados bien
-    //glRotated(90,0,1,0);
-    glPushMatrix();
-    Transform &t = transforms[2];
-    if (modeRST) {
-        glTranslatef(t.tx, t.ty, t.tz);
-        glScalef(t.s, t.s, t.s);
-        glRotatef(t.rz, 0.0f, 0.0f, 1.0f);
-        glRotatef(t.ry, 0.0f, 1.0f, 0.0f);
-        glRotatef(t.rx, 1.0f, 0.0f, 0.0f);
-    } else {
-        for (std::function<void()> &op: ops[2]) {
-            op();
-        }
-    }
-    drawWooper();
-    glPopMatrix();
+    currentScene = 3;
+    if (mesh != nullptr) {
+        delete mesh;
+        mesh = nullptr;
     }
 
-
-/**
-* Method to check whether the axes should be drawn or not
-* @retval true If the axes should be drawn
-* @retval false If the axes should not be drawn
-*/
-bool cgvScene3D::get_axes()
-{ return axes;
-}
-
-/**
-* Method to enable or disable axes drawing
-* @param _ejes Indicates whether the axes should be drawn (true) or not (false)
-* @post The state of the object changes with respect to axes drawing,
-* according to the value passed as a parameter
-*/
-void cgvScene3D::set_axes(bool _axes )
-{ axes = _axes;
-}
-
-// Pistola negra
-void cgvScene3D::drawGun() { //Basada en la pistola de persona 5 royal
-
-    // CUERPO / SLIDE (parte superior del armazón) -- Mas claro
-
-    GLfloat grey[] = {0.15f, 0.15f, 0.15f};
-    glMaterialfv(GL_FRONT, GL_EMISSION, grey);
-
-    glPushMatrix();
-    glTranslatef(0.6f, -0.15f, 0.0f);
-    glScalef(1.8f, 0.18f, 0.25f);
-    glutSolidCube(1.0f);
-    glPopMatrix();
-
-    // Color negro
-    GLfloat black[] = { 0.0f, 0.0f, 0.0f};
-    glMaterialfv(GL_FRONT, GL_EMISSION, black);
-
-    // CAÑÓN (pieza alargada)
-    glPushMatrix();
-    glTranslatef(0.6f, -0.3f, 0.0f);
-    glScalef(1.8f, 0.18f, 0.25f);
-    glutSolidCube(1.0f);
-    glPopMatrix();
-
-    // EMPUÑADURA
-    glPushMatrix();
-    glTranslatef(-0.3f, -0.8f, 0.0f);
-    glRotatef(-20.0f, 0.0f, 0.0f, 1.0f);
-    glScalef(0.28f, 0.9f, 0.2f);
-    glutSolidCube(1.0f);
-    glPopMatrix();
-
-
-    // GATILLO (Accionador)
-    glPushMatrix();
-    glTranslatef(-0.055f, -0.45f, 0.0f);
-    glRotated(90,1,0,0);
-    glScalef(1.5f, 0.75f, 1.25f);
-    glutSolidSphere(0.08f, 12, 6);
-    glPopMatrix();
-
-    // GUARDABISAGRA (esfera achatada como desencadenador / arco)
-    glPushMatrix();
-    glTranslatef(-0.05f, -0.45f, 0.0f);
-    glScalef(0.1f, 0.25f, 0.2f);
-    glutSolidCube(1.0f);
-    glPopMatrix();
-
-    //Recubre Gatillo
-    glPushMatrix();
-    glTranslatef(0.0f, -0.45f, 0.0f);
-    glScalef(1.55f,1.5f,1.2f);
-    glutSolidTorus(0.035f, 0.115f, 30, 40);
-    glPopMatrix();
-
-    // Mirilla
-    glPushMatrix();
-    glTranslatef(-0.1f, -0.05f, 0.07f); // En el lateral del cuerpo/slide 1
-    glRotated(90, 0, 1, 0);
-    glScalef(0.1f, 0.05f, 0.025f);
-    glutSolidCube(1.0f);
-    glPopMatrix();
-
-    glPushMatrix();
-    glTranslatef(-0.1f, -0.05f, -0.07f); // En el lateral del cuerpo/slide 2
-    glRotated(90, 0, 1, 0);
-    glScalef(0.1f, 0.05f, 0.025f);
-    glutSolidCube(1.0f);
-    glPopMatrix();
-
-    glPushMatrix();
-    glTranslatef(-0.1f, -0.05f, 0.07f); // En el lateral del cuerpo/slide 3 (alzillo)
-    glRotated(90, 0, 1, 0);
-    glScalef(0.075f, 0.15f, 0.025f);
-    glutSolidCube(1.0f);
-    glPopMatrix();
-
-    glPushMatrix();
-    glTranslatef(-0.1f, -0.05f, -0.07f); // En el lateral del cuerpo/slide 4 (alzillo 2)
-    glRotated(90, 0, 1, 0);
-    glScalef(0.075f, 0.15f, 0.025f);
-    glutSolidCube(1.0f);
-    glPopMatrix();
-
-    // Punto de Mira (Delante)
-    glPushMatrix();
-    glTranslatef(1.4f, -0.05f, 0.0f); // En la punta del cañón
-    glScalef(0.1f, 0.1f, 0.05f);
-    glutSolidCube(1.0f);
-    glPopMatrix();
-
-    // Seguro (Detrás)
-    glPushMatrix();
-    glTranslatef(-0.28f, -0.07f, 0.0f); // Detrás del cuerpo/slide
-    glutSolidSphere(0.05f,15,2);
-    glPopMatrix();
-
-    //Silenciador
-    glMaterialfv(GL_FRONT, GL_EMISSION, grey);
-    glPushMatrix();
-    glTranslatef(1.47f,-0.3f,0.0f);
-    glutSolidSphere(0.05f, 15,15);
-    glPopMatrix();
-
-    //Salida de la bala -- Formada por un toroide que represente la forma circular y una esfera que sea el boquete
-    GLfloat white[] = { 0.3f, 0.3f, 0.3f};
-    glMaterialfv(GL_FRONT, GL_EMISSION, white);
-    glPushMatrix();
-    glTranslatef(1.49f,-0.15f,0.0f);
-    glRotated(90,0,1,0);
-    glutSolidTorus(0.025f,0.025f,15,15);
-    glPopMatrix();
-
-    glMaterialfv(GL_FRONT, GL_EMISSION, black);
-    glPushMatrix();
-    glTranslatef(1.49f, -0.15f, 0.0f);
-    glutSolidSphere(0.025f, 15, 15);
-    glPopMatrix();
-}
-
-void cgvScene3D::drawLock() {
-    GLfloat blue[] = {0.0f,0.0f,1.0f};
-    glMaterialfv(GL_FRONT, GL_EMISSION, blue);
-
-    //Arco del candado
-    glPushMatrix();
-    glScalef(0.85f,1.35f,0.35f);
-    glTranslatef(0.0f,0.75f,0.0f);
-    glutSolidTorus(0.35f,0.8f,30,30);
-    glPopMatrix();
-
-    //Cuerpo del candado
-    glPushMatrix();
-    glScalef(1.0f,1.0f,0.5f);
-    glutSolidCube(2.0f);
-    glPopMatrix();
-
-    //Cilindro para la llave del candado (Formado por un cirulo arriba y un rectangulo abajo) color blanco
-    GLfloat white[] = {1.0f,1.0f,1.0f};
-    glMaterialfv(GL_FRONT, GL_EMISSION, white);
-
-
-    //Esfera
-    glPushMatrix();
-    glTranslatef(0.0f,0.0f,0.5f);
-    glutSolidSphere(0.2f,22,22);
-    glPopMatrix();
-
-    //Rectangulo
-    glPushMatrix();
-    glScalef(0.5f,1.4f,1.0f);
-    glTranslatef(0.0f,-0.15f,0.45f);
-    glutSolidCube(0.3f);
-    glPopMatrix();
-
+    axes = true;
+    glutPostRedisplay();
 }
 
 void cgvScene3D::drawWooper() {
+    // --- Colores ---
     GLfloat cian[] = {0.0f,0.8f,1.0f};
+    GLfloat azul[] = {0.0f,0.0f,1.0f};
+    GLfloat negro[] = {0.0f,0.0f,0.0f};
+    GLfloat rosa[] = {1.0f, 0.0f, 0.5f};
+    GLfloat morado[] = {0.5f, 0.0f, 0.5f};
+
     glMaterialfv(GL_FRONT, GL_EMISSION, cian);
 
-    //Cabezon
-    glPushMatrix();
-    glTranslatef(0.0f,2.0f,0.0f);
-    glScalef(1.5f,1.0f,1.0f);
-    glutSolidSphere(1.0,25,25);
-    glPopMatrix();
-
-    //Cuerpo
+    // Cuerpo
     glPushMatrix();
     glScalef(1.0f,1.5f,1.0f);
     glutSolidSphere(1.0,25,25);
     glPopMatrix();
 
-    //Cola
+    // Cola (Hijo estático del Cuerpo)
     glPushMatrix();
     glRotated(30,1,0,0);
     glScalef(0.5f,0.5f,1.5f);
@@ -444,24 +454,8 @@ void cgvScene3D::drawWooper() {
     glutSolidSphere(1.0f,25,25);
     glPopMatrix();
 
-    //Pata 1
-    glPushMatrix();
-    glScalef(1.5f,0.5f,0.5f);
-    glTranslatef(-0.2f,-2.65f,0.0f);
-    glutSolidSphere(0.5f,25,25);
-    glPopMatrix();
-
-    //Pata 2
-    glPushMatrix();
-    glScalef(1.5f,0.5f,0.5f);
-    glTranslatef(0.2f,-2.65f,0.0f);
-    glutSolidSphere(0.5f,25,25);
-    glPopMatrix();
-
-    //Branquias Internas
-    GLfloat azul[] = {0.0f,0.0f,1.0f};
+    // Branquias Internas
     glMaterialfv(GL_FRONT, GL_EMISSION, azul);
-
     glPushMatrix();
     glScalef(1.5f,1.0f,1.0f);
     glTranslatef(0.0f,0.65f,0.6f);
@@ -469,137 +463,202 @@ void cgvScene3D::drawWooper() {
     glPopMatrix();
 
     glPushMatrix();
-    glScalef(1.5f,1.0f,1.0f);
     glTranslatef(0.0f,0.0f,0.65f);
     glutSolidSphere(0.45, 25,25);
     glPopMatrix();
 
     glPushMatrix();
-    glScalef(1.5f,1.0f,1.0f);
     glTranslatef(0.0f,-0.65f,0.5f);
     glutSolidSphere(0.5, 25,25);
     glPopMatrix();
 
+    //Patas
+    glMaterialfv(GL_FRONT, GL_EMISSION, cian);
+    glPushMatrix();
+    glRotatef(wooperPatasRotZ, 0, 0, 1);
 
-    GLfloat negro[] = {0.0f,0.0f,0.0f};
+    // Pata 1
+    glPushMatrix();
+    glScalef(1.5f,0.5f,0.5f);
+    glTranslatef(-0.2f,-2.65f,0.0f);
+    glutSolidSphere(0.5f,25,25);
+    glPopMatrix();
+
+    // Pata 2
+    glPushMatrix();
+    glScalef(1.5f,0.5f,0.5f);
+    glTranslatef(0.2f,-2.65f,0.0f);
+    glutSolidSphere(0.5f,25,25);
+    glPopMatrix();
+
+    glPopMatrix();
+
+    glPushMatrix(); // Conjunto cabeza
+
+    glTranslatef(0.0f, 2.0f, 0.0f);
+    glRotatef(wooperCabezaRotZ, 0, 0, 1);
+
+    //Cabezon
+    glMaterialfv(GL_FRONT, GL_EMISSION, cian);
+    glPushMatrix();
+    glScalef(1.5f,1.0f,1.0f);
+    glutSolidSphere(1.0,25,25);
+    glPopMatrix();
+
+    // Ojos (Hijos estáticos de la Cabeza)
     glMaterialfv(GL_FRONT, GL_EMISSION, negro);
-    //Ojo derecho
     glPushMatrix();
-    glTranslatef(-0.7f,2.25f,0.75f);
+    glTranslatef(-0.7f, 0.25f, 0.75f);
     glutSolidSphere(0.25, 25,25);
     glPopMatrix();
 
-    //Ojo Izqierdo
     glPushMatrix();
-    glTranslatef(0.7f,2.25f,0.75f);
+    glTranslatef(0.7f, 0.25f, 0.75f);
     glutSolidSphere(0.25, 25,25);
     glPopMatrix();
 
-    //Boca
-    GLfloat rosa[] = {1.0f, 0.0f, 0.5f};
+    // Boca (Hijo estático de la Cabeza)
     glMaterialfv(GL_FRONT, GL_EMISSION, rosa);
-
     glPushMatrix();
-    glTranslatef(0.0f,1.8f,0.75f);
+    glTranslatef(0.0f, -0.2f, 0.75f);
     glutSolidSphere(0.35, 25,25);
     glPopMatrix();
 
-    //Branquias Externas
-    GLfloat morado[] = {0.5f, 0.0f, 0.5f};
-    glMaterialfv(GL_FRONT, GL_EMISSION, morado);
 
-    glPushMatrix();
-    glTranslatef(2.0f,2.0f,0.0f);
-    glScalef(2.0f,0.5f,0.5f);
-    glutSolidCube(0.5);
-    glPopMatrix();
+        glPushMatrix(); // INICIO GRUPO BRANQUIAS EXTERNAS
 
-    glPushMatrix();
-    glTranslatef(-2.0f,2.0f,0.0f);
-    glScalef(2.0f,0.5f,0.5f);
-    glutSolidCube(0.5);
-    glPopMatrix();
+        glRotatef(wooperBranquiasRotX, 1, 0, 0);
 
-    glPushMatrix();
-    glTranslatef(2.3f,2.0f,0.0f);
-    glScalef(0.5f,2.0f,0.5f);
-    glutSolidCube(0.35);
-    glPopMatrix();
+        glMaterialfv(GL_FRONT, GL_EMISSION, morado);
 
-    glPushMatrix();
-    glTranslatef(-2.3f,2.0f,0.0f);
-    glScalef(0.5f,2.0f,0.5f);
-    glutSolidCube(0.35);
-    glPopMatrix();
+            // Branquias Horizontales
+            glPushMatrix();
+            glTranslatef(2.0f, 0.0f, 0.0f);
+            glScalef(2.0f,0.5f,0.5f);
+            glutSolidCube(0.5);
+            glPopMatrix();
 
-    glPushMatrix();
-    glTranslatef(1.8f,2.0f,0.0f);
-    glScalef(0.5f,2.15f,0.5f);
-    glutSolidCube(0.4);
-    glPopMatrix();
+            glPushMatrix();
+            glTranslatef(-2.0f, 0.0f, 0.0f);
+            glScalef(2.0f,0.5f,0.5f);
+            glutSolidCube(0.5);
+            glPopMatrix();
 
-    glPushMatrix();
-    glTranslatef(-1.8f,2.0f,0.0f);
-    glScalef(0.5f,2.15f,0.5f);
-    glutSolidCube(0.4);
-    glPopMatrix();
+
+                glPushMatrix(); // INICIO GRUPO BRANQUIAS PEQUEÑAS
+
+                // Branquias Verticales
+                glPushMatrix();
+                glTranslatef(2.3f, 0.0f, 0.0f);
+                glRotatef(wooperBranquiasPequesRotY, 0, 1, 0);
+                glScalef(0.5f,2.0f,0.5f);
+                glutSolidCube(0.35);
+                glPopMatrix();
+
+                glPushMatrix();
+                glTranslatef(-2.3f, 0.0f, 0.0f);
+                glRotatef(wooperBranquiasPequesRotY, 0, 1, 0);
+                glScalef(0.5f,2.0f,0.5f);
+                glutSolidCube(0.35);
+                glPopMatrix();
+
+                glPushMatrix();
+                glTranslatef(1.8f, 0.0f, 0.0f);
+                glRotatef(wooperBranquiasPequesRotY, 0, 1, 0);
+                glScalef(0.5f,2.15f,0.5f);
+                glutSolidCube(0.4);
+                glPopMatrix();
+
+                glPushMatrix();
+                glTranslatef(-1.8f, 0.0f, 0.0f);
+                glRotatef(wooperBranquiasPequesRotY, 0, 1, 0);
+                glScalef(0.5f,2.15f,0.5f);
+                glutSolidCube(0.4);
+                glPopMatrix();
+
+                glPopMatrix(); // FIN GRUPO BRANQUIAS PEQUEÑAS
+            glPopMatrix(); // FIN GRUPO BRANQUIAS EXTERNAS
+    glPopMatrix(); // FIN GRUPO CABEZA
 }
 
+int cgvScene3D::getObjetoSeleccionado() const {
+    return objetoSeleccionado;
+}
 
-//Apartado 2
+void cgvScene3D::setObjetoSeleccionado(int objetoSeleccionado) {
+    cgvScene3D::objetoSeleccionado = objetoSeleccionado;
+}
 
-void cgvScene3D::applyTranslation(float dx, float dy, float dz) {
-    if (deferredMode) {
-        // Guardar pero no aplicar todavía
-        ops[selected].push_back([=](){ transforms[selected].tx += dx;
-            transforms[selected].ty += dy;
-            transforms[selected].tz += dz; });
-    } else {
-        // Aplicar inmediatamente
-        transforms[selected].tx += dx;
-        transforms[selected].ty += dy;
-        transforms[selected].tz += dz;
+void cgvScene3D::controlarParte(int parte, double incremento) {
+    if (objetoSeleccionado == 1) { // --- BANDERA ---
+        switch (parte) {
+            case 1: // 'b'/'B' -> Base (Rotar Y)
+                baseRotY += incremento;
+                break;
+            case 2: // 'c'/'C' -> Mástil (Rotar Y)
+                mastilRotY += incremento;
+                break;
+            case 3: // 'm'/'M' -> Bandera (Mover Y)
+                banderaPosY += incremento * 0.1;
+                if (banderaPosY > 0) banderaPosY = 0;
+                if (banderaPosY < -3.5) banderaPosY = -3.5;
+                break;
+            case 4: // 'n'/'N' -> Logo (Rotar Z)
+                logoRotZ += incremento;
+                break;
+        }
+    } else if (objetoSeleccionado == 2) { // --- WOOPER ---
+        switch (parte) {
+            case 1: // 'b'/'B' -> Patas (Rotar Z)
+                wooperPatasRotZ += incremento;
+
+                if (wooperPatasRotZ > 15.0) wooperPatasRotZ = 15.0;
+                if (wooperPatasRotZ < -15.0) wooperPatasRotZ = -15.0;
+                break;
+            case 2: // 'c'/'C' -> Cabeza (Rotar X)
+                wooperCabezaRotZ += incremento;
+                if (wooperCabezaRotZ > 10.0) wooperCabezaRotZ = 10.0;
+                if (wooperCabezaRotZ < -10.0) wooperCabezaRotZ = -10.0;
+                break;
+            case 3: // 'm'/'M' -> Branquias Externas (Rotar X)
+                wooperBranquiasRotX += incremento;
+                break;
+            case 4: // 'n'/'N' -> Branquias Pequeñas (Rotar Y)
+                wooperBranquiasPequesRotY += incremento;
+                break;
+        }
     }
 }
 
-void cgvScene3D::applyRotation(float rx, float ry, float rz) {
-    if (deferredMode) {
-        // Guardar la operación para aplicarla luego
-        ops[selected].push_back([=]() {
-            transforms[selected].rx += rx;
-            transforms[selected].ry += ry;
-            transforms[selected].rz += rz;
-        });
-    } else {
-        // Aplicar inmediatamente
-        transforms[selected].rx += rx;
-        transforms[selected].ry += ry;
-        transforms[selected].rz += rz;
-    }
+int cgvScene3D::getCurrentScene() const {
+    return currentScene;
 }
 
-void cgvScene3D::applyScaling(float factor) {
-    if (deferredMode) {
-        // Guarda la operación de escala para ejecutarla en el render (orden pulsado)
-        ops[selected].push_back([=]() {
-            glScalef(factor, factor, factor);
-        });
-    } else {
-        // Acumula escala homogénea en 's'
-        transforms[selected].s *= factor;
-    }
+void cgvScene3D::setCurrentScene(int currentScene) {
+    cgvScene3D::currentScene = currentScene;
 }
 
+void cgvScene3D::toggleAnimation() {
+    animation = !animation;
+}
 
-void cgvScene3D::renderSceneContent(int scene)
-{
-    if (axes)
-        paint_axes();
+void cgvScene3D::updateAnimation() {
+    if(!animation){
+        return;
+    }
+    timer += 0.05;
 
-    if (scene == SceneA)
-        renderSceneA();
-    else if (scene == SceneB)
-        renderSceneB();
-    else if (scene == SceneC)
-        renderSceneC();
+    if(objetoSeleccionado == 1){
+        // La bandera sube y baja por el mástil (usamos sin() para oscilar). 3.5 (limite)/2 = 1.75
+        baseRotY = timer*20;
+        mastilRotY = -(timer*50);
+        banderaPosY = -1.75 + (sin(timer)*1.75);
+        logoRotZ = timer * 100;
+    }
+    else if (objetoSeleccionado == 2){
+        wooperPatasRotZ = sin(timer)*15;
+        wooperCabezaRotZ = -(sin(timer)*15);
+        wooperBranquiasRotX = sin(timer*1.5)*30;
+        wooperBranquiasPequesRotY = -(sin(timer * 1.5) * 60);
+    }
 }
