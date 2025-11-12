@@ -45,6 +45,7 @@ class cgvScene3D
     double wooperCabezaRotZ = 0;
     double wooperBranquiasRotX = 0;
     double wooperBranquiasPequesRotY = 0;
+    double wooperColaZ = 0;
 
     //Grados de libertad Bandera
     double mastilRotY = 0;

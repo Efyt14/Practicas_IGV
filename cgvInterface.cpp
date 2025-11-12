@@ -161,7 +161,7 @@ void cgvInterface::keyboardFunc(unsigned char key, int x, int y)
             // --- 'b' / 'B' (Escena A vs Escena B) ---
         case 'b':
             if (scene == 2) {
-                _instance->scene.controlarParte(1, 5.0); // Práctica 2: Base / Patas
+                _instance->scene.controlarParte(1, 5.0); // Práctica 2: Base
             }
             break;
         case 'B':

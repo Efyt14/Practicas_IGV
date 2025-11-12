@@ -446,15 +446,16 @@ void cgvScene3D::drawWooper() {
     glutSolidSphere(1.0,25,25);
     glPopMatrix();
 
-    // Cola (Hijo estático del Cuerpo)
+    // Cola
     glPushMatrix();
     glRotated(30,1,0,0);
+    glRotatef(wooperColaZ, 0, 0, 1);
     glScalef(0.5f,0.5f,1.5f);
     glTranslatef(0.0f,-1.5f,-0.65f);
     glutSolidSphere(1.0f,25,25);
     glPopMatrix();
 
-    // Branquias Internas
+    // Branquias Internas (Panza)
     glMaterialfv(GL_FRONT, GL_EMISSION, azul);
     glPushMatrix();
     glScalef(1.5f,1.0f,1.0f);
@@ -478,18 +479,18 @@ void cgvScene3D::drawWooper() {
     glRotatef(wooperPatasRotZ, 0, 0, 1);
 
     // Pata 1
-    glPushMatrix();
-    glScalef(1.5f,0.5f,0.5f);
-    glTranslatef(-0.2f,-2.65f,0.0f);
-    glutSolidSphere(0.5f,25,25);
-    glPopMatrix();
+        glPushMatrix();
+        glScalef(1.5f,0.5f,0.5f);
+        glTranslatef(-0.2f,-2.65f,0.0f);
+        glutSolidSphere(0.5f,25,25);
+        glPopMatrix();
 
-    // Pata 2
-    glPushMatrix();
-    glScalef(1.5f,0.5f,0.5f);
-    glTranslatef(0.2f,-2.65f,0.0f);
-    glutSolidSphere(0.5f,25,25);
-    glPopMatrix();
+        // Pata 2
+        glPushMatrix();
+        glScalef(1.5f,0.5f,0.5f);
+        glTranslatef(0.2f,-2.65f,0.0f);
+        glutSolidSphere(0.5f,25,25);
+        glPopMatrix();
 
     glPopMatrix();
 
@@ -660,5 +661,6 @@ void cgvScene3D::updateAnimation() {
         wooperCabezaRotZ = -(sin(timer)*15);
         wooperBranquiasRotX = sin(timer*1.5)*30;
         wooperBranquiasPequesRotY = -(sin(timer * 1.5) * 60);
+        wooperColaZ = sin(timer)*30;
     }
 }
