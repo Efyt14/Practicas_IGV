@@ -685,7 +685,7 @@ void cgvScene3D::updateAnimation() {
     if(!animation){
         return;
     }
-    timer += 0.05;
+    timer += 0.05; //Variable para ver que tanto oscilan los objetos
 
     if(objetoSeleccionado == 1){
         // La bandera sube y baja por el mástil (usamos sin() para oscilar). 3.5 (limite)/2 = 1.75
