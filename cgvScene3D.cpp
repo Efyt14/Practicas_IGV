@@ -247,8 +247,6 @@ void cgvScene3D::drawLogo(float lenght) {
 
 }
 
-
-
 /**
  * Method with OpenGL calls to visualise the scene
  */
@@ -344,6 +342,46 @@ void cgvScene3D::display( void )
             break;
 
         case 3: // Escena C
+            glScaled(0.2, 0.2, 0.2);
+            glPushMatrix();
+            glRotatef(baseRotY, 0, 1, 0);
+            // --- 1. Base (Cubo) ---
+                glPushMatrix();
+                paintCube();
+                glPopMatrix();
+
+                // --- 2. Esfera Armilar (Estática, Hija de la Base) ---
+                glPushMatrix();
+                drawEsferaArmilar(0.4);
+                glPopMatrix();
+
+                // --- 3. Mástil (Hijo de la Base) ---
+                    glPushMatrix();
+                    glRotatef(mastilRotY, 0, 1, 0); // <-- GRADO DE LIBERTAD (Mástil)
+                    drawMastil(1.5);
+
+
+                    // --- 3.1. Bandera (Hija del Mástil) ---
+                    glPushMatrix();
+                    glTranslatef(0, banderaPosY, 0); // <-- GRADO DE LIBERTAD (Bandera)
+
+                    glScaled(1.5, 1, 0.2);
+                    glTranslatef(0.9, 5, 0);
+                    drawFlag(1.5);
+
+                    // --- 3.1.1. Logo (Hijo de la Bandera) ---
+                        glPushMatrix();
+                        glScaled(0.3, 0.45, 1);
+                        glTranslatef(0, 0, 0.2);
+                        glRotated(45, 0, 0, 1);
+
+                        glRotatef(logoRotZ, 0, 0, 1); // <-- GRADO DE LIBERTAD (Logo)
+
+                        drawLogo(1);
+                        glPopMatrix(); // Fin Logo
+                    glPopMatrix(); // Fin Bandera
+                glPopMatrix(); // Fin Mástil
+            glPopMatrix(); // Fin conjunto de la bandera
             break;
     }
     glPopMatrix (); // restores the modelling matrix
@@ -653,7 +691,7 @@ void cgvScene3D::updateAnimation() {
         // La bandera sube y baja por el mástil (usamos sin() para oscilar). 3.5 (limite)/2 = 1.75
         baseRotY = timer*20;
         mastilRotY = -(timer*50);
-        banderaPosY = -1.75 + (sin(timer)*1.75);
+        banderaPosY = -1.75 + sin(timer)*1.75;
         logoRotZ = timer * 100;
     }
     else if (objetoSeleccionado == 2){

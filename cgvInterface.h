@@ -18,6 +18,17 @@
 
 
 /**
+* Interface operating modes
+*/
+enum interfaceMode
+{ CGV_VIEW ///< The scene will be displayed normally in the window
+, CGV_SELECT /**< The display window has been clicked, and the
+* scene should be displayed in selection mode
+*/
+};
+
+
+/**
  * Objects of this class encapsulate the interface and state of the application.
  */
 class cgvInterface
@@ -28,6 +39,19 @@ class cgvInterface
 
     cgvScene3D scene; ///< Scene displayed in the window defined by cgvInterface
     cgvCamera camera; ///< Camera used to display the scene
+
+
+    interfaceMode mode = CGV_VIEW; ///< Scene display mode
+    int cursorX = 0 /**< X coordinate. Screen pixel over which the mouse is
+    * positioned, for clicking or dragging
+    */
+    , cursorY = 0; /**< Y coordinate. Screen pixel over which the mouse is positioned, to click or drag.
+    */
+
+    int selected_object = -1; ///< Identifier of the selected object, -1 if none exists.
+
+    bool button_held = false; ///< Indicates whether the button is pressed (true) or released (false).
+
 
     // Application of the Singleton design pattern
     static cgvInterface* _instance; ///< Memory address of the single object of the class
@@ -52,7 +76,8 @@ public:
     static void displayFunc (); // method for displaying the scene
     static void idleFunc (); // method to animate the scene
 
-
+    static void mouseFunc ( GLint button, GLint state, GLint x, GLint y ); // mouse click control
+    static void motionFunc ( GLint x, GLint y ); // mouse movement control with the button pressed
 
     // Methods
     // creates the world displayed in the window

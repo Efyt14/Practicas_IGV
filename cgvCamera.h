@@ -105,6 +105,14 @@ public:
     void zoom ( double factor ); // zooms in on the camera
 
     void nextView ( void );
+
+    void set_view ( CameraType t );
+
+    CameraType get_view ();
+
+    void set_poscam ( poscam x );
+
+    poscam get_poscam ();
 };
 
 #endif   // __IGVCAMARA

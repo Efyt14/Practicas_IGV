@@ -181,3 +181,41 @@ void cgvCamera::nextView(void)
             break;
     }
 }
+
+
+/**
+* Changes the camera type
+* @param t New type (valid values: IGV_PARALLEL, IGV_FRUSTUM, IGV_PERSPECTIVA)
+* @pre Assumes the parameter has a valid value
+* @post Changes the camera type
+*/
+void cgvCamera::set_view ( CameraType t )
+{ type = t;
+}
+
+/**
+* Query the camera type
+* @return The camera type currently stored in the object
+*/
+CameraType cgvCamera::get_view ()
+{ return type;
+}
+
+/**
+* Change the camera view type
+* @param x New view type (valid values: panorama, plan, elevation,
+* profile)
+* @pre Assumes the parameter has a valid value
+* @post Changes the stored view type (does not change the camera position,
+* reference point, or vertical vector)
+*/void cgvCamera::set_poscam ( poscam x )
+{ vis = x;
+}
+
+/**
+* Query the camera's view type
+* @return The view type stored in the poscam object
+*/
+poscam cgvCamera::get_poscam ()
+{ return vis;
+}

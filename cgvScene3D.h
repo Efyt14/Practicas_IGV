@@ -13,19 +13,7 @@
 
 #include "cgvTriangleMesh.h"
 
-/**
-* Model parts
-*/
-enum part
-{
-    basex ///< Identifies the base of the model
-    , lowerbody ///< Identifies the lower body of the model
-    , upperbody ///< Identifies the upper body of the model
-    , arm ///< Identifies the arm of the model
-};
-
-
-
+//FIXME probar si puedo hacer un struct qeu defina el objeto seleccionado lo coloree indique con un bool si esta coloreado y que tenga un puntero a hijo (si tiene hijo)
 
 /**
  * Objects of this class represent 3D scenes for visualisation.
@@ -33,6 +21,7 @@ enum part
 class cgvScene3D
 {  private:
     // Attributes
+    //FIXME definir un atributo que defina si esta seleccionado el objeto o no y que le cambie el color a uno que sea "colorSelected"
     bool axes = true;   ///< Indicates whether to draw the coordinate axes or not
     float x, y, z, z2;
     int currentScene;
@@ -161,9 +150,7 @@ public:
 
 private:
     void paint_axes ();
-
     void drawWooper();
-
     void drawLogo(float lenght);
 };
 

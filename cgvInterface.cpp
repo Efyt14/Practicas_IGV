@@ -4,6 +4,8 @@
 
 #include "cgvInterface.h"
 
+//FIXME testear motionFunc y mouseFunc
+
 // Application of the Singleton design pattern
 cgvInterface* cgvInterface::_instance = nullptr;
 
@@ -90,6 +92,8 @@ void cgvInterface::start_display_loop ()
  * @pre All parameters are assumed to have valid values
  * @post Class attributes may change, depending on the key pressed
  */
+
+//FIXME include all letters por the camera movements
 void cgvInterface::keyboardFunc(unsigned char key, int x, int y)
 {
 
@@ -320,5 +324,67 @@ void cgvInterface::menuHandle(int value)
             std::cout << "Menu option 3 selected\n"; //Log pq no me carga
             _instance->scene.renderSceneC();
             break;
+    }
+}
+
+/**
+* Method for handling mouse clicks
+* @param button Identifies the button that was clicked. Can be
+* GLUT_LEFT_BUTTON, GLUT_MIDDLE_BUTTON, or GLUT_RIGHT_BUTTON
+* @param state Describes whether the button was pressed (GLUT_DOWN) or released
+* (GLUT_UP)
+* @param x X coordinate of the viewport pixel where the click was made
+* @param y Y coordinate of the viewport pixel where the click was made
+* @post Updates the interface state
+*/
+void cgvInterface::mouseFunc(GLint button, GLint state, GLint x, GLint y)
+{
+    // Section A: Check that the left button has been pressed
+    if (button == GLUT_LEFT_BUTTON)
+    {
+        // Section A: Save that the button has been pressed or released. If it has been pressed, it must be
+        // Switch to IGV_SELECT mode
+        if (state == GLUT_DOWN)
+        {
+            _instance->button_held = true;
+            _instance->mode = CGV_SELECT;
+        }
+
+        if (state == GLUT_UP)
+        {
+            _instance->button_held = false;
+        }
+
+        // Section A: Save the pressed pixel
+        _instance->cursorX = x;
+        _instance->cursorY = y;
+        // Section A: Refresh the contents of the viewing window
+        glutPostRedisplay();
+    }
+}
+/**
+* Method for controlling mouse movement with a button pressed
+* @param x X coordinate of the mouse cursor position in the window
+* @param y Y coordinate of the mouse cursor position in the window
+* @post The interface state is updated
+*/
+void cgvInterface::motionFunc(GLint x, GLint y)
+{
+    // Section B: If the button is held and an object is selected,
+    // check the selected object and the mouse position and update
+    // the corresponding object's degree of freedom accordingly
+    if (_instance->button_held)
+    {
+        if (_instance->selected_object >= 0) {
+            // FIXME, en vez de selecccionar una Box tiene que definir cualquiera de los objetos que forman la bandera
+            // _instance->scene.getBoxes()[_instance->selected_object]->rotateY(_instance->cursorX - x);
+        }
+
+        // Section B: Save the new mouse position
+        _instance->cursorX = x;
+        _instance->cursorY = y;
+
+        // Section B: Refresh the contents of the viewport
+        displayFunc();
     }
 }
