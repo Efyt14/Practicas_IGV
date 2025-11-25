@@ -73,6 +73,11 @@ class cgvCamera
     cgvPoint3D rPanoramic;  ///< Almacena la r de la vista panorámica
     cgvPoint3D vPanoramic;  ///< Almacena la V de la vista panorámica
 
+    //Atributos para la animacion de la camara
+    int animState = 0; // 0: Orbitar, 1: Zoom In, 2: Zoom Out. Orbitara y cuando llegue a un punto hara zoom
+    double orbitAngle = 0.0;
+    double initialZoomWidth = 5.0; // Para guardar el zoom original
+
     // Methods
 
 public:
@@ -113,6 +118,9 @@ public:
     void set_poscam ( poscam x );
 
     poscam get_poscam ();
+
+    //Animacion
+    void updateCameraAnimation();
 };
 
 #endif   // __IGVCAMARA

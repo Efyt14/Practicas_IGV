@@ -12,8 +12,15 @@
 #endif // defined(__APPLE__) && defined(__MACH__)
 
 #include "cgvTriangleMesh.h"
+#include <vector>
 
 //FIXME probar si puedo hacer un struct qeu defina el objeto seleccionado lo coloree indique con un bool si esta coloreado y que tenga un puntero a hijo (si tiene hijo)
+
+// Estructura para las monedas
+struct Coin {
+    double x, y, z; // Posición
+    double rot;     // Rotación
+};
 
 /**
  * Objects of this class represent 3D scenes for visualisation.
@@ -48,6 +55,11 @@ class cgvScene3D
 
     bool animation = false;
     double timer;
+
+    //Apartado C
+    std::vector<Coin> coins; // Lista dinámica de monedas
+    bool selectionMode; // Si es true, pintamos colores falsos (ID)
+    int idToHighlight = -1;     // El ID del objeto que se va a marcar con "otro color" internamente (se utilizara un id)
 
 
 
@@ -146,12 +158,25 @@ public:
 
     void toggleAnimation();
     void updateAnimation();
+    bool isAnimationActive();
+
+    // Métodos para Monedas
+    void addCoin();
+    void removeCoin();
+
+    // Métodos para Selección
+    void setSelectionMode(bool active);
+    void setIdToHighlight(int id); // Para decirle qué objeto está seleccionado
+    void controlarParteSceneC(int id, double incremento);
 
 
 private:
     void paint_axes ();
     void drawWooper();
     void drawLogo(float lenght);
-};
+    // Helper para configurar el material o el color de selección
+    void applyColorMaterial(int id, float r, float g, float b);
+    void drawCoin(Coin& c); // Método para dibujar una moneda
+    };
 
 #endif   // __CGVSCENE3D

@@ -4,8 +4,6 @@
 
 #include "cgvInterface.h"
 
-//FIXME testear motionFunc y mouseFunc
-
 // Application of the Singleton design pattern
 cgvInterface* cgvInterface::_instance = nullptr;
 
@@ -67,7 +65,6 @@ void cgvInterface::configure_environment ( int argc, char **argv, int _window_wi
 
     glEnable ( GL_DEPTH_TEST ); // activates z-buffer surface hiding
     glClearColor( 1.0, 1.0, 1.0, 0.0 ); // sets the window background colour
-
     glEnable(GL_LIGHTING); // activates scene lighting
     glEnable(GL_NORMALIZE); // normalises normal vectors for lighting calculation
 
@@ -93,7 +90,6 @@ void cgvInterface::start_display_loop ()
  * @post Class attributes may change, depending on the key pressed
  */
 
-//FIXME include all letters por the camera movements
 void cgvInterface::keyboardFunc(unsigned char key, int x, int y)
 {
 
@@ -101,12 +97,20 @@ void cgvInterface::keyboardFunc(unsigned char key, int x, int y)
 
     switch (key)
     {
-        // --- CONTROLES GLOBALES (Siempre funcionan) ---
-        case 'x': // Rotar cámara
-            _instance->scene.incrX();
+        // --- CONTROLES GLOBALES ---
+        case 'x':
+            if (scene == 3) {
+                _instance->scene.addCoin();
+            } else {
+                _instance->scene.incrX();
+            }
             break;
         case 'X':
-            _instance->scene.decrX();
+            if (scene == 3) {
+                _instance->scene.removeCoin();
+            } else {
+                _instance->scene.decrX();
+            }
             break;
         case 'y':
             _instance->scene.incrY();
@@ -143,6 +147,9 @@ void cgvInterface::keyboardFunc(unsigned char key, int x, int y)
         case 'G':
             if (scene == 1 && _instance->scene.getMesh() != nullptr) {
                 _instance->scene.getMesh()->changeShader();
+            }
+            if (scene == 3) {
+                _instance->activationCamera = !_instance->activationCamera;
             }
             break;
 
@@ -202,6 +209,9 @@ void cgvInterface::keyboardFunc(unsigned char key, int x, int y)
             if (scene == 2){
                 _instance->scene.toggleAnimation();
             }
+            if (scene == 3){
+                _instance->scene.toggleAnimation();
+            }
             break;
     }
     glutPostRedisplay(); // refresh the viewport content
@@ -249,8 +259,159 @@ void cgvInterface::displayFunc ()
 */
 void cgvInterface::idleFunc()
 {
+    // 1. Animación de MODELO (controlada por 'a'/'A')
     _instance->scene.updateAnimation();
+
+    // 2. Animación de CÁMARA (controlada por 'g'/'G')
+    if (_instance->activationCamera) {
+        _instance->camera.updateCameraAnimation();
+    }
+
     glutPostRedisplay();
+}
+
+/**
+* Method for handling mouse clicks
+* @param button Identifies the button that was clicked. Can be
+* GLUT_LEFT_BUTTON, GLUT_MIDDLE_BUTTON, or GLUT_RIGHT_BUTTON
+* @param state Describes whether the button was pressed (GLUT_DOWN) or released
+* (GLUT_UP)
+* @param x X coordinate of the viewport pixel where the click was made
+* @param y Y coordinate of the viewport pixel where the click was made
+* @post Updates the interface state
+*/
+void cgvInterface::mouseFunc(GLint button, GLint state, GLint x, GLint y)
+{
+    if (button == GLUT_LEFT_BUTTON)
+    {
+        if (state == GLUT_DOWN)
+        {
+            _instance->button_held = true;
+            _instance->mode = CGV_SELECT;
+            _instance->cursorX = x;
+            _instance->cursorY = y;
+
+            glClearColor(0.0, 0.0, 0.0, 0.0);
+
+            // 1. Ponemos la escena en modo selección
+            _instance->scene.setSelectionMode(true);
+
+            // 2. Dibujamos (en el back buffer)
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            _instance->scene.display();
+
+            // 3. Leemos el color
+            GLint viewport[4];
+            glGetIntegerv(GL_VIEWPORT, viewport);
+
+            //Definimos un área de picking (ej. 5x5 píxeles)
+            const int PICK_REGION_SIZE = 5;
+            // Centramos el área en el cursor
+            int region_x = x - (PICK_REGION_SIZE / 2);
+            int region_y = viewport[3] - y - (PICK_REGION_SIZE / 2);
+
+            // Creamos un buffer para todos los píxeles del área
+            GLubyte pixels[PICK_REGION_SIZE * PICK_REGION_SIZE * 3];
+
+            // Leemos el bloque de píxeles
+            glReadPixels(region_x, region_y, PICK_REGION_SIZE, PICK_REGION_SIZE, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+
+            glClearColor(1.0, 1.0, 1.0, 0.0); // Restaurar fondo blanco
+
+            // 4. "Votación" para encontrar el ID más común (que no sea 0)
+            int id_counts[256] = {0}; // Array para contar IDs (0-255)
+            int max_count = 0;
+            int selected_id = 0; // ID ganador (0 = fondo)
+
+            for (int i = 0; i < PICK_REGION_SIZE * PICK_REGION_SIZE; ++i) {
+                int id = pixels[i * 3]; // Obtenemos el canal Rojo (nuestro ID)
+                if (id != 0) { // Ignoramos el fondo
+                    id_counts[id]++;
+                    if (id_counts[id] > max_count) {
+                        max_count = id_counts[id];
+                        selected_id = id;
+                    }
+                }
+            }
+
+            // Usamos el 'selected_id' de la votación
+            std::cout << "Click X:" << x << " Y:" << y << " -> ID detectado en region: " << selected_id << std::endl;
+
+            if (selected_id == 0) _instance->selected_object = -1;
+            else _instance->selected_object = selected_id;
+
+            // 5. Volvemos a modo normal
+            _instance->scene.setSelectionMode(false);
+            _instance->scene.setObjetoSeleccionado(_instance->selected_object); // Para Escena B
+            _instance->scene.setIdToHighlight(_instance->selected_object);     // Para Escena C (Highlight)
+
+            glutPostRedisplay();
+        }
+        if (state == GLUT_UP)
+        {
+            _instance->button_held = false;
+        }
+    }
+}
+/**
+* Method for controlling mouse movement with a button pressed
+* @param x X coordinate of the mouse cursor position in the window
+* @param y Y coordinate of the mouse cursor position in the window
+* @post The interface state is updated
+*/
+void cgvInterface::motionFunc(GLint x, GLint y)
+{
+    if (!_instance->button_held || _instance->selected_object <= 0)
+        return;
+
+    int diffX = x - _instance->cursorX;
+    int diffY = _instance->cursorY - y;
+
+    int scene = _instance->scene.getCurrentScene();
+    int id = _instance->selected_object;
+
+    double sensitivity = 0.5;
+
+    if (scene == 2)
+    {
+        // Bandera (parte 3) usa diffY
+        if (id == 3)
+            _instance->scene.controlarParte(id, diffY * 0.05);
+        else
+            _instance->scene.controlarParte(id, diffX * sensitivity);
+
+        _instance->cursorX = x;
+        _instance->cursorY = y;
+        glutPostRedisplay();
+        return;
+    }
+
+    if (scene == 3)
+    {
+        switch (id)
+        {
+            case 1: // BASE
+                _instance->scene.controlarParteSceneC(1, diffX * sensitivity);
+                break;
+
+            case 2: // MÁSTIL
+                _instance->scene.controlarParteSceneC(2, diffX * sensitivity);
+                break;
+
+            case 3: // BANDERA
+                _instance->scene.controlarParteSceneC(3, diffY * sensitivity);
+                break;
+
+            case 4: // LOGO
+                _instance->scene.controlarParteSceneC(4, diffX * sensitivity);
+                break;
+        }
+
+        _instance->cursorX = x;
+        _instance->cursorY = y;
+        glutPostRedisplay();
+        return;
+    }
 }
 
 /**
@@ -261,6 +422,8 @@ void cgvInterface::initialize_callbacks ()
     glutReshapeFunc ( reshapeFunc );
     glutDisplayFunc ( displayFunc );
     glutIdleFunc(idleFunc);
+    glutMouseFunc( mouseFunc );
+    glutMotionFunc(motionFunc);
 }
 
 /**
@@ -324,67 +487,5 @@ void cgvInterface::menuHandle(int value)
             std::cout << "Menu option 3 selected\n"; //Log pq no me carga
             _instance->scene.renderSceneC();
             break;
-    }
-}
-
-/**
-* Method for handling mouse clicks
-* @param button Identifies the button that was clicked. Can be
-* GLUT_LEFT_BUTTON, GLUT_MIDDLE_BUTTON, or GLUT_RIGHT_BUTTON
-* @param state Describes whether the button was pressed (GLUT_DOWN) or released
-* (GLUT_UP)
-* @param x X coordinate of the viewport pixel where the click was made
-* @param y Y coordinate of the viewport pixel where the click was made
-* @post Updates the interface state
-*/
-void cgvInterface::mouseFunc(GLint button, GLint state, GLint x, GLint y)
-{
-    // Section A: Check that the left button has been pressed
-    if (button == GLUT_LEFT_BUTTON)
-    {
-        // Section A: Save that the button has been pressed or released. If it has been pressed, it must be
-        // Switch to IGV_SELECT mode
-        if (state == GLUT_DOWN)
-        {
-            _instance->button_held = true;
-            _instance->mode = CGV_SELECT;
-        }
-
-        if (state == GLUT_UP)
-        {
-            _instance->button_held = false;
-        }
-
-        // Section A: Save the pressed pixel
-        _instance->cursorX = x;
-        _instance->cursorY = y;
-        // Section A: Refresh the contents of the viewing window
-        glutPostRedisplay();
-    }
-}
-/**
-* Method for controlling mouse movement with a button pressed
-* @param x X coordinate of the mouse cursor position in the window
-* @param y Y coordinate of the mouse cursor position in the window
-* @post The interface state is updated
-*/
-void cgvInterface::motionFunc(GLint x, GLint y)
-{
-    // Section B: If the button is held and an object is selected,
-    // check the selected object and the mouse position and update
-    // the corresponding object's degree of freedom accordingly
-    if (_instance->button_held)
-    {
-        if (_instance->selected_object >= 0) {
-            // FIXME, en vez de selecccionar una Box tiene que definir cualquiera de los objetos que forman la bandera
-            // _instance->scene.getBoxes()[_instance->selected_object]->rotateY(_instance->cursorX - x);
-        }
-
-        // Section B: Save the new mouse position
-        _instance->cursorX = x;
-        _instance->cursorY = y;
-
-        // Section B: Refresh the contents of the viewport
-        displayFunc();
     }
 }

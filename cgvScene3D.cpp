@@ -18,7 +18,7 @@ cgvScene3D::cgvScene3D ()
     axes = true;
     rotX = rotY = rotZ = 0.0f;
 
-    currentScene = 2;
+    currentScene = 1; //Para el testing;
 
     // TODO: Initialize attributes for controlling the model's degrees of freedom
     x = 0;
@@ -28,6 +28,10 @@ cgvScene3D::cgvScene3D ()
 
     objetoSeleccionado = 1;
     timer = 0.0;
+
+    // Inicializamos selección
+    selectionMode = false;
+    idToHighlight = -1;
 }
 
 /**
@@ -71,11 +75,17 @@ void cgvScene3D::paint_axes()
 }
 
 void cgvScene3D::paintCube() {
-    //FIXME buscar marron oscuro muy oscuro
-    GLfloat color_cube[] = {0.35, 0.16, 0.14};
-
-    glMaterialfv(GL_FRONT, GL_EMISSION, color_cube);
-
+    // buscar marron oscuro muy oscuro
+    if (!selectionMode && idToHighlight == 1) {
+        glDisable(GL_LIGHTING);
+        glColor3f(1, 1, 0);
+    }
+    else {
+        if (!selectionMode) {
+            GLfloat color_cube[] = {0.35, 0.16, 0.14};
+            glMaterialfv(GL_FRONT, GL_EMISSION, color_cube);
+        }
+    }
     glBegin(GL_QUADS);
     glVertex3f(-0.75f, -0.75f, 0.75f);
     glVertex3f(0.75f, -0.75f, 0.75f);
@@ -121,9 +131,16 @@ void cgvScene3D::paintCube() {
 
 void cgvScene3D::drawMastil(float lenght) {
     GLUquadricObj* tube;
-    GLfloat mastilColor[] = {0.3,0.3,0.3};
-
-    glMaterialfv(GL_FRONT,GL_EMISSION,mastilColor);
+    if (!selectionMode && idToHighlight == 2) {
+        glDisable(GL_LIGHTING);
+        glColor3f(1, 1, 0);
+    }
+    else {
+        if (!selectionMode) {
+            GLfloat mastilColor[] = {0.3, 0.3, 0.3};
+            glMaterialfv(GL_FRONT, GL_EMISSION, mastilColor);
+        }
+    }
 
     tube = gluNewQuadric();
     gluQuadricDrawStyle(tube, GLU_FILL);
@@ -139,20 +156,29 @@ void cgvScene3D::drawMastil(float lenght) {
 
 
 void cgvScene3D::drawEsferaArmilar(float lenght) {
-    GLfloat esferaColor[] = {1.0,1.0,0.0};
-
-    glMaterialfv(GL_FRONT, GL_EMISSION,esferaColor);
+    // Esta no va a ser seleccionable, pero por si acaso:
+    if (!selectionMode) {
+        GLfloat esferaColor[] = {1.0, 1.0, 0.0};
+        glMaterialfv(GL_FRONT, GL_EMISSION, esferaColor);
+    }
 
     glPushMatrix();
-    glTranslatef(0.0,6,0.0);
-    glutSolidSphere(lenght, 25,25);
+    glTranslatef(0.0, 6, 0.0);
+    glutSolidSphere(lenght, 25, 25);
     glPopMatrix();
 }
 
 void cgvScene3D::drawFlag(float lenght) {
-    GLfloat flagColor[] = {1.0,0.0,0.0};
-
-    glMaterialfv(GL_FRONT, GL_EMISSION,flagColor);
+    if (!selectionMode && idToHighlight == 3) {
+        glDisable(GL_LIGHTING);
+        glColor3f(1, 1, 0);
+    }
+    else {
+        if (!selectionMode) {
+            GLfloat flagColor[] = {1.0, 0.0, 0.0};
+            glMaterialfv(GL_FRONT, GL_EMISSION, flagColor);
+        }
+    }
 
     glBegin(GL_QUADS);
     glVertex3f(-0.75f, -0.75f, 0.75f);
@@ -197,11 +223,18 @@ void cgvScene3D::drawFlag(float lenght) {
     glEnd();
 }
 
-//TODO diamante aka, cuadrado aplastado y rotado jaja lol
+
 void cgvScene3D::drawLogo(float lenght) {
-    GLfloat flagColor[] = {0.3,0.3,0.3};
-
-    glMaterialfv(GL_FRONT, GL_EMISSION,flagColor);
+    if (!selectionMode && idToHighlight == 4) {
+        glDisable(GL_LIGHTING);
+        glColor3f(1, 1, 0);
+    }
+    else {
+        if (!selectionMode) {
+            GLfloat logoColor[] = {0.3, 0.3, 0.3};
+            glMaterialfv(GL_FRONT, GL_EMISSION, logoColor);
+        }
+    }
 
     glBegin(GL_QUADS);
     glVertex3f(-0.75f, -0.75f, 0.75f);
@@ -246,41 +279,42 @@ void cgvScene3D::drawLogo(float lenght) {
     glEnd();
 
 }
+
+
 
 /**
  * Method with OpenGL calls to visualise the scene
  */
 void cgvScene3D::display( void )
 {
-    GLfloat mesh_colour[] = { 0, 0.25, 0 };
-    // create lights   // point light to display the cube
-    GLfloat light0[4] = { 2.0, 2.5, 3.0, 1 };
+    // Siempre mantenemos un push/pop global bien balanceado para no corromper la pila.
+    glPushMatrix();
 
-    // the light is placed here if it remains fixed and does not move with the scene
-    glLightfv ( GL_LIGHT0, GL_POSITION, light0 );
-    glEnable(GL_LIGHT0);
+    // Si estamos en "Modo Selección" (click del ratón), apagamos luces para pintar colores planos (IDs).
+    // Si no, encendemos luces normales.
+    if (selectionMode) {
+        glDisable(GL_LIGHTING);
+        glDisable(GL_DITHER);
+    } else {
+        glEnable(GL_LIGHTING);
+        glEnable(GL_DITHER);
 
-    // create the model
-    glPushMatrix(); // save the modelling matrix
+        GLfloat mesh_colour[] = { 0, 0.25, 0 };
+        GLfloat light0[4] = { 2.0, 2.5, 3.0, 1 };
+        glLightfv ( GL_LIGHT0, GL_POSITION, light0 );
+        glEnable(GL_LIGHT0);
+        glMaterialfv ( GL_FRONT, GL_EMISSION, mesh_colour );
+    }
 
     // paint the axes
     if (axes) paint_axes();
 
-    // create the model
+    // create the model - rotaciones globales (APLICADAS SIEMPRE)
     glRotatef(rotX, 1, 0, 0);
     glRotatef(rotY, 0, 1, 0);
     glRotatef(rotZ, 0, 0, 1);
 
-    // the light is placed here if it moves with the scene
-    glLightfv(GL_LIGHT0,GL_POSITION,light0);
-    glMaterialfv ( GL_FRONT, GL_EMISSION, mesh_colour );
-
-    // Section B: the following call must be replaced by the call to the mesh visualisation method
-    /*GLUquadric *cyl = gluNewQuadric ();
-    gluCylinder ( cyl, 1, 1, 1, 20, 5 );
-    gluDeleteQuadric ( cyl );
-    cyl = nullptr;
-     */
+    // Switch por escenas (mantenemos transformaciones y order coherente
     switch (currentScene)
     {
         case 1: // Escena A
@@ -288,18 +322,26 @@ void cgvScene3D::display( void )
                 mesh->display();
             break;
 
-        case 2: // Escena B
-            //Objeto 1
-
+        case 2: // Escena B (bandera + wooper) - modo visualización
+        {
+            glPushMatrix();
+            // escala global de escenario
             glScaled(0.2, 0.2, 0.2);
 
+            // --- WOOPER (a la derecha) ---
             glPushMatrix();
+            glTranslatef(3.5f, 0.0f, 0.0f); // separo el wooper
+            // en modo selección no pintamos IDs para el wooper por ahora
             drawWooper();
             glPopMatrix();
 
 
+            //BANDERA//
+
+
+            // --- Conjunto Bandera (a la izquierda) ---
             glPushMatrix();
-            glTranslatef(-5, 0, 0); // Posiciona  el conjunto de la bandera
+            glTranslatef(-2.5f, 0.0f, 0.0f); // posiciona el conjunto de la bandera
 
             glRotatef(baseRotY, 0, 1, 0);
             // --- 1. Base (Cubo) ---
@@ -317,74 +359,102 @@ void cgvScene3D::display( void )
             glRotatef(mastilRotY, 0, 1, 0); // <-- GRADO DE LIBERTAD (Mástil)
             drawMastil(1.5);
 
-
             // --- 3.1. Bandera (Hija del Mástil) ---
-                glPushMatrix();
-                glTranslatef(0, banderaPosY, 0); // <-- GRADO DE LIBERTAD (Bandera)
+            glPushMatrix();
+            glTranslatef(0, banderaPosY, 0); // <-- GRADO DE LIBERTAD (Bandera)
 
-                glScaled(1.5, 1, 0.2);
-                glTranslatef(0.9, 5, 0);
-                drawFlag(1.5);
+            glScaled(1.5, 1, 0.2);
+            glTranslatef(0.9, 5, 0);
+            drawFlag(1.5);
 
-                // --- 3.1.1. Logo (Hijo de la Bandera) ---
-                    glPushMatrix();
-                    glScaled(0.3, 0.45, 1);
-                    glTranslatef(0, 0, 0.2);
-                    glRotated(45, 0, 0, 1);
+            // --- 3.1.1. Logo (Hijo de la Bandera) ---
+            glPushMatrix();
+            glScaled(0.3, 0.45, 1);
+            glTranslatef(0, 0, 0.2);
+            glRotated(45, 0, 0, 1);
 
-                    glRotatef(logoRotZ, 0, 0, 1); // <-- GRADO DE LIBERTAD (Logo)
-
-                    drawLogo(1);
-                    glPopMatrix(); // Fin Logo
-                glPopMatrix(); // Fin Bandera
+            glRotatef(logoRotZ, 0, 0, 1); // <-- GRADO DE LIBERTAD (Logo)
+            drawLogo(1);
+            glPopMatrix(); // Fin Logo
+            glPopMatrix(); // Fin Bandera
             glPopMatrix(); // Fin Mástil
-            glPopMatrix(); // Fin conjunto de la bandera
-            break;
 
-        case 3: // Escena C
-            glScaled(0.2, 0.2, 0.2);
+            glPopMatrix(); // Fin conjunto de la bandera
+            glPopMatrix(); // fin escala global
+            break;
+        }
+
+        case 3: // Escena C (Picking + Monedas)
+        {
+            glPushMatrix();
+            glScaled(0.2, 0.2, 0.2); // Escala global
+
+            // 1. DIBUJAR MONEDAS (Decoración)
+            // Solo las dibujamos si NO estamos seleccionando (para que no molesten al click)
+            if (!selectionMode) {
+                for (std::vector<Coin>::iterator it = coins.begin(); it != coins.end(); it++) {
+                    drawCoin(*it);
+                }
+            }
+
+            // Posiciono el conjunto de la bandera en el mismo sitio que en la escena 2
+            glPushMatrix();
+            glTranslatef(2.5f, 0.0f, 0.0f); // misma traslación que escena 2
+
+
+            // --- ID 1: BASE ---
             glPushMatrix();
             glRotatef(baseRotY, 0, 1, 0);
-            // --- 1. Base (Cubo) ---
-                glPushMatrix();
-                paintCube();
-                glPopMatrix();
+            applyColorMaterial(1, 0.35f, 0.16f, 0.14f);
+            paintCube();
 
-                // --- 2. Esfera Armilar (Estática, Hija de la Base) ---
-                glPushMatrix();
+            glPopMatrix();
+
+            // --- ESFERA (Decorativa) ---
+            glPushMatrix();
+            glRotatef(baseRotY, 0, 1, 0);
+            // La esfera la dejamos sin ID (no seleccionable), pero si no estamos en selectionMode pintamos su color
+            if (!selectionMode) {
                 drawEsferaArmilar(0.4);
-                glPopMatrix();
+            }
+            glPopMatrix();
 
-                // --- 3. Mástil (Hijo de la Base) ---
-                    glPushMatrix();
-                    glRotatef(mastilRotY, 0, 1, 0); // <-- GRADO DE LIBERTAD (Mástil)
-                    drawMastil(1.5);
+            // --- ID 2: MÁSTIL ---
+            glPushMatrix();
+            glRotatef(baseRotY, 0, 1, 0);
+            glRotatef(mastilRotY, 0, 1, 0);
+            applyColorMaterial(2, 0.3f, 0.3f, 0.3f);
+            drawMastil(1.5);
+
+            // --- ID 3: BANDERA ---
+            glPushMatrix();
+            glTranslatef(0, banderaPosY, 0);
+            glScaled(1.5, 1, 0.2);
+            glTranslatef(0.9, 5, 0);
+            applyColorMaterial(3, 1.0f, 0.0f, 0.0f);
+            drawFlag(1.5);
 
 
-                    // --- 3.1. Bandera (Hija del Mástil) ---
-                    glPushMatrix();
-                    glTranslatef(0, banderaPosY, 0); // <-- GRADO DE LIBERTAD (Bandera)
+            // --- ID 4: LOGO ---
+            glPushMatrix();
+            glScaled(0.3, 0.45, 1);
+            glTranslatef(0, 0, 0.2);
+            glRotated(45, 0, 0, 1);
+            glRotatef(logoRotZ, 0, 0, 1);
+            applyColorMaterial(4, 0.3f, 0.3f, 0.3f);
+            drawLogo(1);
+            glPopMatrix(); // Fin Logo
 
-                    glScaled(1.5, 1, 0.2);
-                    glTranslatef(0.9, 5, 0);
-                    drawFlag(1.5);
+            glPopMatrix(); // Fin Bandera
+            glPopMatrix(); // Fin Mástil
 
-                    // --- 3.1.1. Logo (Hijo de la Bandera) ---
-                        glPushMatrix();
-                        glScaled(0.3, 0.45, 1);
-                        glTranslatef(0, 0, 0.2);
-                        glRotated(45, 0, 0, 1);
-
-                        glRotatef(logoRotZ, 0, 0, 1); // <-- GRADO DE LIBERTAD (Logo)
-
-                        drawLogo(1);
-                        glPopMatrix(); // Fin Logo
-                    glPopMatrix(); // Fin Bandera
-                glPopMatrix(); // Fin Mástil
-            glPopMatrix(); // Fin conjunto de la bandera
+            glPopMatrix(); // Fin conjunto bandera
+            glPopMatrix(); // fin escala global
             break;
+        }
     }
-    glPopMatrix (); // restores the modelling matrix
+
+    glPopMatrix(); // restores the modelling matrix (el push global del principio)
 }
 
 /**
@@ -517,18 +587,18 @@ void cgvScene3D::drawWooper() {
     glRotatef(wooperPatasRotZ, 0, 0, 1);
 
     // Pata 1
-        glPushMatrix();
-        glScalef(1.5f,0.5f,0.5f);
-        glTranslatef(-0.2f,-2.65f,0.0f);
-        glutSolidSphere(0.5f,25,25);
-        glPopMatrix();
+    glPushMatrix();
+    glScalef(1.5f,0.5f,0.5f);
+    glTranslatef(-0.2f,-2.65f,0.0f);
+    glutSolidSphere(0.5f,25,25);
+    glPopMatrix();
 
-        // Pata 2
-        glPushMatrix();
-        glScalef(1.5f,0.5f,0.5f);
-        glTranslatef(0.2f,-2.65f,0.0f);
-        glutSolidSphere(0.5f,25,25);
-        glPopMatrix();
+    // Pata 2
+    glPushMatrix();
+    glScalef(1.5f,0.5f,0.5f);
+    glTranslatef(0.2f,-2.65f,0.0f);
+    glutSolidSphere(0.5f,25,25);
+    glPopMatrix();
 
     glPopMatrix();
 
@@ -564,59 +634,59 @@ void cgvScene3D::drawWooper() {
     glPopMatrix();
 
 
-        glPushMatrix(); // INICIO GRUPO BRANQUIAS EXTERNAS
+    glPushMatrix(); // INICIO GRUPO BRANQUIAS EXTERNAS
 
-        glRotatef(wooperBranquiasRotX, 1, 0, 0);
+    glRotatef(wooperBranquiasRotX, 1, 0, 0);
 
-        glMaterialfv(GL_FRONT, GL_EMISSION, morado);
+    glMaterialfv(GL_FRONT, GL_EMISSION, morado);
 
-            // Branquias Horizontales
-            glPushMatrix();
-            glTranslatef(2.0f, 0.0f, 0.0f);
-            glScalef(2.0f,0.5f,0.5f);
-            glutSolidCube(0.5);
-            glPopMatrix();
+    // Branquias Horizontales
+    glPushMatrix();
+    glTranslatef(2.0f, 0.0f, 0.0f);
+    glScalef(2.0f,0.5f,0.5f);
+    glutSolidCube(0.5);
+    glPopMatrix();
 
-            glPushMatrix();
-            glTranslatef(-2.0f, 0.0f, 0.0f);
-            glScalef(2.0f,0.5f,0.5f);
-            glutSolidCube(0.5);
-            glPopMatrix();
+    glPushMatrix();
+    glTranslatef(-2.0f, 0.0f, 0.0f);
+    glScalef(2.0f,0.5f,0.5f);
+    glutSolidCube(0.5);
+    glPopMatrix();
 
 
-                glPushMatrix(); // INICIO GRUPO BRANQUIAS PEQUEÑAS
+    glPushMatrix(); // INICIO GRUPO BRANQUIAS PEQUEÑAS
 
-                // Branquias Verticales
-                glPushMatrix();
-                glTranslatef(2.3f, 0.0f, 0.0f);
-                glRotatef(wooperBranquiasPequesRotY, 0, 1, 0);
-                glScalef(0.5f,2.0f,0.5f);
-                glutSolidCube(0.35);
-                glPopMatrix();
+    // Branquias Verticales
+    glPushMatrix();
+    glTranslatef(2.3f, 0.0f, 0.0f);
+    glRotatef(wooperBranquiasPequesRotY, 0, 1, 0);
+    glScalef(0.5f,2.0f,0.5f);
+    glutSolidCube(0.35);
+    glPopMatrix();
 
-                glPushMatrix();
-                glTranslatef(-2.3f, 0.0f, 0.0f);
-                glRotatef(wooperBranquiasPequesRotY, 0, 1, 0);
-                glScalef(0.5f,2.0f,0.5f);
-                glutSolidCube(0.35);
-                glPopMatrix();
+    glPushMatrix();
+    glTranslatef(-2.3f, 0.0f, 0.0f);
+    glRotatef(wooperBranquiasPequesRotY, 0, 1, 0);
+    glScalef(0.5f,2.0f,0.5f);
+    glutSolidCube(0.35);
+    glPopMatrix();
 
-                glPushMatrix();
-                glTranslatef(1.8f, 0.0f, 0.0f);
-                glRotatef(wooperBranquiasPequesRotY, 0, 1, 0);
-                glScalef(0.5f,2.15f,0.5f);
-                glutSolidCube(0.4);
-                glPopMatrix();
+    glPushMatrix();
+    glTranslatef(1.8f, 0.0f, 0.0f);
+    glRotatef(wooperBranquiasPequesRotY, 0, 1, 0);
+    glScalef(0.5f,2.15f,0.5f);
+    glutSolidCube(0.4);
+    glPopMatrix();
 
-                glPushMatrix();
-                glTranslatef(-1.8f, 0.0f, 0.0f);
-                glRotatef(wooperBranquiasPequesRotY, 0, 1, 0);
-                glScalef(0.5f,2.15f,0.5f);
-                glutSolidCube(0.4);
-                glPopMatrix();
+    glPushMatrix();
+    glTranslatef(-1.8f, 0.0f, 0.0f);
+    glRotatef(wooperBranquiasPequesRotY, 0, 1, 0);
+    glScalef(0.5f,2.15f,0.5f);
+    glutSolidCube(0.4);
+    glPopMatrix();
 
-                glPopMatrix(); // FIN GRUPO BRANQUIAS PEQUEÑAS
-            glPopMatrix(); // FIN GRUPO BRANQUIAS EXTERNAS
+    glPopMatrix(); // FIN GRUPO BRANQUIAS PEQUEÑAS
+    glPopMatrix(); // FIN GRUPO BRANQUIAS EXTERNAS
     glPopMatrix(); // FIN GRUPO CABEZA
 }
 
@@ -629,6 +699,7 @@ void cgvScene3D::setObjetoSeleccionado(int objetoSeleccionado) {
 }
 
 void cgvScene3D::controlarParte(int parte, double incremento) {
+
     if (objetoSeleccionado == 1) { // --- BANDERA ---
         switch (parte) {
             case 1: // 'b'/'B' -> Base (Rotar Y)
@@ -685,20 +756,142 @@ void cgvScene3D::updateAnimation() {
     if(!animation){
         return;
     }
-    timer += 0.05; //Variable para ver que tanto oscilan los objetos
-
-    if(objetoSeleccionado == 1){
-        // La bandera sube y baja por el mástil (usamos sin() para oscilar). 3.5 (limite)/2 = 1.75
-        baseRotY = timer*20;
-        mastilRotY = -(timer*50);
-        banderaPosY = -1.75 + sin(timer)*1.75;
-        logoRotZ = timer * 100;
+    if (currentScene == 3) {
+        for (std::vector<Coin>::iterator it = coins.begin(); it != coins.end(); it++){
+          it -> rot += 3.5;
+        }
     }
-    else if (objetoSeleccionado == 2){
-        wooperPatasRotZ = sin(timer)*15;
-        wooperCabezaRotZ = -(sin(timer)*15);
-        wooperBranquiasRotX = sin(timer*1.5)*30;
-        wooperBranquiasPequesRotY = -(sin(timer * 1.5) * 60);
-        wooperColaZ = sin(timer)*30;
+    if (currentScene == 2) {
+        timer += 0.05;
+        if(objetoSeleccionado == 1){
+            // La bandera sube y baja por el mástil
+            baseRotY = timer*20;
+            mastilRotY = -(timer*50);
+            banderaPosY = -1.75 + (sin(timer)*1.75);
+            logoRotZ = timer * 100;
+        }
+        else if (objetoSeleccionado == 2){
+            wooperPatasRotZ = sin(timer)*15;
+            wooperCabezaRotZ = -(sin(timer)*15);
+            wooperBranquiasRotX = sin(timer*1.5)*30;
+            wooperBranquiasPequesRotY = -(sin(timer * 1.5) * 60);
+            wooperColaZ = sin(timer)*30;
+        }
+    }
+}
+
+bool cgvScene3D::isAnimationActive() {
+    return animation;
+}
+
+//Para que haga lo que pedia el enunciado de que al seleccionar las teclas x y o z se añadieran o quitaran cajas pues como no tengo cajas voy a poner moneas, TODO preguntar a gema
+void cgvScene3D::drawCoin(Coin& c) {
+    // Las monedas NO son seleccionables
+
+    if (selectionMode) return; // No dibujar monedas en modo selección para no estorbar
+
+    GLfloat gold[] = {1.0f, 0.84f, 0.0f};
+    glMaterialfv(GL_FRONT, GL_EMISSION, gold);
+
+    glPushMatrix();
+    glTranslatef(c.x, c.y, c.z);
+    glRotatef(c.rot, 0, 1, 0); // Girar sobre su eje Y
+    glScalef(0.3, 0.3, 0.05);  // Aplastada como una moneda
+    glutSolidSphere(1.0, 20, 20);
+    glPopMatrix();
+}
+
+void cgvScene3D::addCoin() {
+    Coin c;
+
+    // Posición central de la bandera
+    const double flagX = 3.5;
+    const double flagY = 0.0;
+    const double flagZ = 0.0;
+
+    // 1. Elegimos un ángulo aleatorio (en radianes)
+    // rand() % 6283 / 1000.0 nos da un número entre 0.0 y 6.283 (aprox. 2*PI)
+    double angle = (rand() % 6283) / 1000.0;
+
+    // 2. Elegimos una distancia aleatoria desde el poste
+    // Por ejemplo, entre 1.0 y 3.0 unidades de distancia
+    double radius = 1.0 + (rand() % 200) / 100.0; // Rango: [1.0, 2.99]
+
+    // 3. Calculamos X y Z usando trigonometría
+    c.x = flagX + radius * cos(angle);
+    c.z = flagZ + radius * sin(angle);
+
+    // 4. HAcemos q floten
+    c.y = flagY + (rand() % 400 / 100.0); // Rango: [0.0, 3.99]
+
+    c.rot = 0;
+    coins.push_back(c);
+}
+
+void cgvScene3D::removeCoin() {
+    if (!coins.empty()) {
+        coins.pop_back();
+    }
+}
+
+
+//Seleccion
+
+void cgvScene3D::applyColorMaterial(int id, float r, float g, float b) {
+    if (selectionMode) {
+        // MODO PICKING: El color es el ID. Intentare hacer si me da tiempo que el color se vea en la pantalla
+
+        glColor3ub((GLubyte)id, 0, 0);
+    } else {
+        // MODO VISUALIZACIÓN:
+        if (id == idToHighlight) {
+            // Si es el objeto seleccionado -> AMARILLO
+            GLfloat yellow[] = {1.0f, 1.0f, 0.0f};
+            glMaterialfv(GL_FRONT, GL_EMISSION, yellow);
+        } else {
+            // Si no -> SU COLOR ORIGINAL
+            GLfloat color[] = {r, g, b};
+            glMaterialfv(GL_FRONT, GL_EMISSION, color);
+        }
+    }
+}
+
+void cgvScene3D::setSelectionMode(bool active) {
+    selectionMode = active;
+}
+
+void cgvScene3D::setIdToHighlight(int id) {
+    idToHighlight = id;
+}
+
+void cgvScene3D::controlarParteSceneC(int id, double incremento)
+{
+    switch(id)
+    {
+        case 1: // BASE
+            baseRotY += incremento * 0.5; // Suave
+            break;
+
+        case 2: // MÁSTIL
+            mastilRotY += incremento * 0.5;
+            break;
+
+        case 3: // BANDERA -> movimiento vertical
+        {
+            double nuevaY = banderaPosY + incremento * 0.05;
+
+            if (nuevaY > 0) nuevaY = 0;
+            if (nuevaY < -3.5) nuevaY = -3.5;
+
+            banderaPosY = nuevaY;
+            break;
+        }
+
+        case 4: // LOGO
+            logoRotZ += incremento * 0.5;
+            break;
+
+        default:
+            break;
     }
 }

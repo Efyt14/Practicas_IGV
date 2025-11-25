@@ -22,7 +22,7 @@
 */
 enum interfaceMode
 { CGV_VIEW ///< The scene will be displayed normally in the window
-, CGV_SELECT /**< The display window has been clicked, and the
+    , CGV_SELECT /**< The display window has been clicked, and the
 * scene should be displayed in selection mode
 */
 };
@@ -51,6 +51,8 @@ class cgvInterface
     int selected_object = -1; ///< Identifier of the selected object, -1 if none exists.
 
     bool button_held = false; ///< Indicates whether the button is pressed (true) or released (false).
+
+    bool activationCamera = false;
 
 
     // Application of the Singleton design pattern

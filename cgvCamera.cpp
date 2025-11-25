@@ -219,3 +219,48 @@ CameraType cgvCamera::get_view ()
 poscam cgvCamera::get_poscam ()
 { return vis;
 }
+
+void cgvCamera::updateCameraAnimation() {
+    // Velocidades
+    double orbitSpeed = 0.01;
+    double zoomSpeed = 0.1;
+
+    switch (animState) {
+        case 0: // ORBITAR
+            // Rotamos P0 alrededor del eje Y (usando coordenadas polares simples)
+        {
+            double radio = sqrt(P0[X]*P0[X] + P0[Z]*P0[Z]);
+            double angle = atan2(P0[Z], P0[X]);
+
+            angle += orbitSpeed;
+
+            P0[X] = radio * cos(angle);
+            P0[Z] = radio * sin(angle);
+
+            // CONDICIÓN: Si la Z pasa cerca de 0 (frente o perfil), pasamos a Zoom
+            // (Usamos un margen pequeño porque float nunca es exacto 0), hace que meta dos zooms, bueno, mas estetico
+            if (abs(P0[Z]) < 0.05 && P0[X] > -2.0) {
+                initialZoomWidth = xwmax; // Guardamos tamaño actual
+                animState = 1; // Pasar a Zoom In
+            }
+        }
+            break;
+
+        case 1: // ZOOM IN
+            zoom(2.0);
+            // Si nos hemos acercado mucho (xwmax pequeño), cambiamos
+            if (xwmax < 1.0) {
+                animState = 2; // Pasar a Zoom Out
+            }
+            break;
+
+        case 2: // ZOOM OUT
+            zoom(-2.0);
+            // Si volvemos al tamaño original, a orbitar
+            if (xwmax >= initialZoomWidth) {
+                xwmax = initialZoomWidth;
+                animState = 0; // Volver a Orbitar
+            }
+            break;
+    }
+}
