@@ -54,6 +54,8 @@ class cgvInterface
 
     bool activationCamera = false;
 
+    bool windowChange;
+
 
     // Application of the Singleton design pattern
     static cgvInterface* _instance; ///< Memory address of the single object of the class
@@ -107,6 +109,9 @@ public:
     //Para la creacion del menu, que cada apartado esté en una escena
     void create_menu();
     static void menuHandle(int value);
+
+
+    static void specialFunc(int key, int x, int y);
 };
 
 #endif   // __CGVINTERFACE

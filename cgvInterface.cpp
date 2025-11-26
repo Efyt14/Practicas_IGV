@@ -92,12 +92,22 @@ void cgvInterface::start_display_loop ()
 
 void cgvInterface::keyboardFunc(unsigned char key, int x, int y)
 {
+    const float TRANSL_STEP = 0.1f;
+    const float ROT_STEP = 5.0f; // degrees
+    const float SCALE_UP = 1.1f;
+    const float SCALE_DOWN = 0.9f;
 
     int scene = _instance->scene.getCurrentScene();
 
     switch (key)
     {
         // --- CONTROLES GLOBALES ---
+        case 'u':
+            _instance->scene.applyTranslation(0.0f, TRANSL_STEP, 0.0f);
+            break;
+        case 'U':
+            _instance->scene.applyTranslation(0.0f, -TRANSL_STEP, 0.0f);
+            break;
         case 'x':
             if (scene == 3) {
                 _instance->scene.addCoin();
@@ -109,26 +119,73 @@ void cgvInterface::keyboardFunc(unsigned char key, int x, int y)
             if (scene == 3) {
                 _instance->scene.removeCoin();
             } else {
+                if (scene == 2) {
+                    if (_instance->scene.getObjetoSeleccionado() == 1) {
+                        _instance->scene.selected = 0;
+                        _instance->scene.applyRotation(ROT_STEP, 0, 0);
+                    } else {
+                        _instance->scene.selected = 1;
+                        _instance->scene.applyRotation(ROT_STEP, 0, 0);
+                    }
+                }
                 _instance->scene.decrX();
             }
             break;
         case 'y':
-            _instance->scene.incrY();
+            if (_instance->camera.interactiveMode) {
+                _instance->camera.rotateY(0.05f);
+                _instance->camera.apply();
+            } else {
+                _instance->scene.incrY();
+            }
             break;
         case 'Y':
-            _instance->scene.decrY();
+            if (_instance->camera.interactiveMode) {
+                _instance->camera.rotateY(-0.05f);
+                _instance->camera.apply();
+            } else {
+                if (scene == 2) {
+                    if (_instance->scene.getObjetoSeleccionado() == 1) {
+                        _instance->scene.selected = 0;
+                        _instance->scene.applyRotation(0, ROT_STEP, 0);
+                    } else {
+                        _instance->scene.selected = 1;
+                        _instance->scene.applyRotation(0, ROT_STEP, 0);
+                    }
+                }
+                _instance->scene.decrY();
+            }
             break;
         case 'z':
+            if (scene == 2) {
+                if (_instance->scene.getObjetoSeleccionado() == 1) {
+                    _instance->scene.selected = 0;
+                    _instance->scene.applyRotation(0, 0, ROT_STEP);
+                } else {
+                    _instance->scene.selected = 1;
+                    _instance->scene.applyRotation(0, 0, ROT_STEP);
+                }
+            }
             _instance->scene.incrZ();
             break;
         case 'Z':
             _instance->scene.decrZ();
+            break;
+        case 's':
+            _instance->scene.applyScaling(SCALE_UP);
+            break;
+        case 'S':
+            _instance->scene.applyScaling(SCALE_DOWN);
             break;
         case 'e': // Activar/desactivar ejes
             _instance->scene.set_axes ( !_instance->scene.get_axes () );
             break;
         case 'v':
             _instance->camera.nextView();
+            break;
+            // split the window into four views
+        case '4':
+            _instance->windowChange = !-_instance->windowChange;
             break;
         case 27: // Salir
             exit(1);
@@ -213,10 +270,43 @@ void cgvInterface::keyboardFunc(unsigned char key, int x, int y)
                 _instance->scene.toggleAnimation();
             }
             break;
+        case 'q':
+        case 'Q':
+            _instance->camera.toggleInteractive();
+            break;
     }
     glutPostRedisplay(); // refresh the viewport content
 }
 
+
+void cgvInterface::specialFunc(int key, int x, int y) {
+    //Teclas para mover en modo camera
+    if (_instance->camera.interactiveMode) {
+        switch (key) {
+            case GLUT_KEY_LEFT:
+                _instance->camera.orbit(-0.05);
+                break;
+            case GLUT_KEY_RIGHT:
+                _instance->camera.orbit(0.05);
+                break;
+            case GLUT_KEY_UP:
+                _instance->camera.pitch(0.05);
+                break;
+            case GLUT_KEY_DOWN:
+                _instance->camera.pitch(-0.05);
+                break;
+        }
+    } else {
+        //Teclas para mover en modo normal
+        switch (key) {
+            case GLUT_KEY_LEFT:  _instance->scene.applyTranslation(1, 0, 0); break;
+            case GLUT_KEY_RIGHT: _instance->scene.applyTranslation(-1, 0, 0); break;
+            case GLUT_KEY_UP:    _instance->scene.applyTranslation(0, 0, 1); break;
+            case GLUT_KEY_DOWN:  _instance->scene.applyTranslation(0, 0, -1); break;
+        }
+    }
+    glutPostRedisplay();
+}
 
 /**
  * Method that defines the camera and viewport. It is called automatically
@@ -235,6 +325,44 @@ void cgvInterface::reshapeFunc ( int w, int h )
     _instance->camera.apply ();
 }
 
+void apply_local_camera(
+        const cgvCamera& camera,
+        int vw, int vh,
+        const cgvPoint3D& eye,
+        const cgvPoint3D& center,
+        const cgvPoint3D& up)
+{
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+
+    if (camera.type == CGV_PARALLEL) {
+        glOrtho(camera.xwmin, camera.xwmax,
+                camera.ywmin, camera.ywmax,
+                camera.znear, camera.zfar);
+    }
+    else if (camera.type == CGV_FRUSTUM) {
+        glFrustum(camera.xwmin, camera.xwmax,
+                  camera.ywmin, camera.ywmax,
+                  camera.znear, camera.zfar);
+    }
+    else { // perspective
+        double asp;
+        if (vw == 0 || vh == 0)
+            asp = camera.aspect;
+        else
+            asp = vw/vh;
+
+        gluPerspective(camera.angle, asp, camera.znear, camera.zfar);
+    }
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+
+    gluLookAt(eye[X], eye[Y], eye[Z],
+              center[X], center[Y], center[Z],
+              up[X], up[Y], up[Z]);
+}
+
 /**
  * Method for displaying the scene
  */
@@ -249,6 +377,46 @@ void cgvInterface::displayFunc ()
 
     //display the scene
     _instance->scene.display();
+
+    int w = _instance->get_window_width();
+    int h = _instance->get_window_height();
+    if (w <= 0) w = glutGet(GLUT_WINDOW_WIDTH);
+    if (h <= 0) h = glutGet(GLUT_WINDOW_HEIGHT);
+
+    if (_instance->windowChange) {
+        // ---- Vista 4 ventanas ----
+        int vw = w / 2;
+        int vh = h / 2;
+
+        // 1) Perspectiva / interactiva (arriba izquierda)
+        glViewport(0, h - vh, vw, vh);
+        _instance->camera.apply();
+        _instance->scene.renderSceneContent();
+
+        // 2) Planta (arriba derecha)
+        glViewport(vw, h - vh, vw, vh);
+        apply_local_camera(_instance->camera, vw, vh,
+                           cgvPoint3D(0.0, 5.0, 0.0),
+                           cgvPoint3D(0.0, 0.0, 0.0),
+                           cgvPoint3D(0.0, 0.0, -1.0));
+        _instance->scene.renderSceneContent();
+
+        // 3) Alzado (abajo izquierda)
+        glViewport(0, 0, vw, vh);
+        apply_local_camera(_instance->camera, vw, vh,
+                           cgvPoint3D(0.0, 0.0, 5.0),
+                           cgvPoint3D(0.0, 0.0, 0.0),
+                           cgvPoint3D(0.0, 1.0, 0.0));
+        _instance->scene.renderSceneContent();
+
+        // 4) Perfil (abajo derecha)
+        glViewport(vw, 0, vw, vh);
+        apply_local_camera(_instance->camera, vw, vh,
+                           cgvPoint3D(5.0, 0.0, 0.0),
+                           cgvPoint3D(0.0, 0.0, 0.0),
+                           cgvPoint3D(0.0, 1.0, 0.0));
+        _instance->scene.renderSceneContent();
+    }
 
     // refresh the window
     glutSwapBuffers (); // used instead of glFlush() to prevent flickering
@@ -421,6 +589,7 @@ void cgvInterface::initialize_callbacks ()
 {  glutKeyboardFunc ( keyboardFunc );
     glutReshapeFunc ( reshapeFunc );
     glutDisplayFunc ( displayFunc );
+    glutSpecialFunc(specialFunc);
     glutIdleFunc(idleFunc);
     glutMouseFunc( mouseFunc );
     glutMotionFunc(motionFunc);
@@ -489,3 +658,4 @@ void cgvInterface::menuHandle(int value)
             break;
     }
 }
+

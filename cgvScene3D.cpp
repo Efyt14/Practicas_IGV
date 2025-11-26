@@ -399,7 +399,7 @@ void cgvScene3D::display( void )
 
             // Posiciono el conjunto de la bandera en el mismo sitio que en la escena 2
             glPushMatrix();
-            glTranslatef(2.5f, 0.0f, 0.0f); // misma traslación que escena 2
+            glTranslatef(0.0f, 0.0f, 0.0f); // misma traslación que escena 2
 
 
             // --- ID 1: BASE ---
@@ -805,7 +805,7 @@ void cgvScene3D::addCoin() {
     Coin c;
 
     // Posición central de la bandera
-    const double flagX = 3.5;
+    const double flagX = 0.0;
     const double flagY = 0.0;
     const double flagZ = 0.0;
 
@@ -814,8 +814,8 @@ void cgvScene3D::addCoin() {
     double angle = (rand() % 6283) / 1000.0;
 
     // 2. Elegimos una distancia aleatoria desde el poste
-    // Por ejemplo, entre 1.0 y 3.0 unidades de distancia
-    double radius = 1.0 + (rand() % 200) / 100.0; // Rango: [1.0, 2.99]
+    // Por ejemplo, entre -3.0 y 3.0 unidades de distancia
+    double radius = -1.0 + (rand() % 600) / 100.0;  // Rango: [-1.0, 0.99]
 
     // 3. Calculamos X y Z usando trigonometría
     c.x = flagX + radius * cos(angle);
@@ -894,4 +894,32 @@ void cgvScene3D::controlarParteSceneC(int id, double incremento)
         default:
             break;
     }
+}
+
+void cgvScene3D::applyTranslation(float dx, float dy, float dz) {
+    transforms[selected].tx += dx;
+    transforms[selected].ty += dy;
+    transforms[selected].tz += dz;
+}
+
+void cgvScene3D::applyScaling(float factor) {
+    transforms[selected].s *= factor;
+}
+
+void cgvScene3D::applyRotation(float rx, float ry, float rz) {
+    transforms[selected].rx += rx;
+    transforms[selected].ry += ry;
+    transforms[selected].rz += rz;
+}
+
+void cgvScene3D::renderSceneContent()
+{
+    if (axes)
+        paint_axes();
+    if (currentScene == 1)
+        renderSceneA();
+    else if (currentScene == 2)
+        renderSceneB();
+    else if (currentScene == 3)
+        renderSceneC();
 }

@@ -19,14 +19,14 @@
                 "CMAKE_BUILD_TYPE": "Debug"
             },
             "toolchainFile": "generators\\conan_toolchain.cmake",
-            "binaryDir": "C:\\Users\\usuariopc\\Desktop\\Colegio\\Uni\\3\u00ba\\1\u00ba\\IGV\\Practicas\\Practica 2\\pr2a_conan\\pr2a_conan\\cmake-build-debug\\conan\\build\\Debug"
+            "binaryDir": "C:\\Users\\admin\\Downloads\\Practicas_IGV-Practica2\\Practicas_IGV-Practica2\\cmake-build-debug\\conan\\build\\Debug"
         }
     ],
     "buildPresets": [
         {
             "name": "conan-debug",
             "configurePreset": "conan-debug",
-            "jobs": 4
+            "jobs": 28
         }
     ],
     "testPresets": [

@@ -26,9 +26,15 @@ struct Coin {
  * Objects of this class represent 3D scenes for visualisation.
  */
 class cgvScene3D
-{  private:
+{
+    // Para cada objeto vamos a guardar sus transformaciones acumuladas
+    struct Transform {
+        float tx, ty, tz;   // traslación
+        float rx, ry, rz;   // rotación
+        float s;            // escala
+    };
+    private:
     // Attributes
-    //FIXME definir un atributo que defina si esta seleccionado el objeto o no y que le cambie el color a uno que sea "colorSelected"
     bool axes = true;   ///< Indicates whether to draw the coordinate axes or not
     float x, y, z, z2;
     int currentScene;
@@ -66,10 +72,12 @@ class cgvScene3D
 public:
     //CREACION DE ESCENAS
     std::string currentSceneName;
+    Transform transforms[2];   // un transform por cada objeto
+    int selected = 0;          // 0 = A, 1 = B
 
     void renderSceneA(); // Cilindro
-    void renderSceneB(); // Vacía
-    void renderSceneC(); // Vacía
+    void renderSceneB(); // Grafos de Escena
+    void renderSceneC(); // Mouse
 
 
     // Default constructors and destructor
@@ -169,6 +177,12 @@ public:
     void setIdToHighlight(int id); // Para decirle qué objeto está seleccionado
     void controlarParteSceneC(int id, double incremento);
 
+    void applyTranslation(float dx, float dy, float dz);
+    void applyScaling(float factor);
+    void applyRotation(float dx, float dy, float dz);
+
+    void renderSceneContent();
+
 
 private:
     void paint_axes ();
@@ -177,6 +191,6 @@ private:
     // Helper para configurar el material o el color de selección
     void applyColorMaterial(int id, float r, float g, float b);
     void drawCoin(Coin& c); // Método para dibujar una moneda
-    };
+};
 
 #endif   // __CGVSCENE3D

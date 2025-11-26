@@ -264,3 +264,63 @@ void cgvCamera::updateCameraAnimation() {
             break;
     }
 }
+
+void cgvCamera::toggleInteractive() {
+    interactiveMode = !interactiveMode;
+    if (interactiveMode) {
+        // inicializamos parámetros si es la primera vez
+        // Vector desde la cámara (P0) hacia el punto de mira (r)
+        cgvPoint3D dir(r[X] - P0[X], r[Y] - P0[Y], r[Z] - P0[Z]);
+        radius = sqrt(dir[X]*dir[X] + dir[Y]*dir[Y] + dir[Z]*dir[Z]); // Distancia entre cámara y el punto que mira → radio de la órbita
+        orbitAngleY = atan2(P0[X], P0[Z]); //Te devuelve ne que cuadrante está y asi se puede mover orbital en "all" el alrededor
+        pitchAngle = asin(P0[Y] / radius); //ArcoSeno para sacar el angulo
+        selfRotY = 0.0;
+    }
+}
+
+void cgvCamera::orbit(double delta) {
+    orbitAngleY += delta;
+    updatePosition();
+}
+
+void cgvCamera::pitch(double delta) {
+    // Modificamos el ángulo de pitch
+    pitchAngle += delta;
+
+    // Capamos el pitcheo entre -90º y +90º (en radianes) para que funcione como la camara de un videojuego y no se pueda dar la vuelta 360 y maree al jugador 🤓☝
+    const double limit = M_PI / 2.0;
+    if (pitchAngle > limit) pitchAngle = limit;
+    if (pitchAngle < -limit) pitchAngle = -limit;
+
+    updatePosition();
+}
+
+void cgvCamera::rotateY(double delta) {
+    selfRotY += delta;
+    updatePosition();
+}
+
+void cgvCamera::updatePosition() {
+    // calculamos posición orbital alrededor del origen
+    double x = radius * cos(pitchAngle) * sin(orbitAngleY);
+    double y = radius * sin(pitchAngle);
+    double z = radius * cos(pitchAngle) * cos(orbitAngleY);
+
+    P0 = cgvPoint3D(x, y, z);
+    r = cgvPoint3D(0, 0, 0); // siempre mira al origen
+    V = cgvPoint3D(0, 1, 0);
+
+    // rotación local sobre Y
+    if (fabs(selfRotY) > 0) {
+        double cosA = cos(selfRotY);
+        double sinA = sin(selfRotY);
+
+        // rotamos el punto de vista en torno al eje Y local
+        cgvPoint3D dir(r[X] - P0[X], r[Y] - P0[Y], r[Z] - P0[Z]);
+        double newX = dir[X] * cosA + dir[Z] * sinA;
+        double newZ = -dir[X] * sinA + dir[Z] * cosA;
+        r = cgvPoint3D(P0[X] + newX, P0[Y] + dir[Y], P0[Z] + newZ);
+    }
+    apply();
+}
+

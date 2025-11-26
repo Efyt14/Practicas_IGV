@@ -1,40 +1,29 @@
-"C:\Program Files\JetBrains\CLion 2023.2.1\bin\cmake\win\x64\bin\cmake.exe" -DCMAKE_BUILD_TYPE=Debug "-DCMAKE_MAKE_PROGRAM=C:/Program Files/JetBrains/CLion 2023.2.1/bin/ninja/win/x64/ninja.exe" -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -G Ninja -S "C:\Users\usuariopc\Desktop\Colegio\Uni\3º\1º\IGV\Practicas\Practica 2\pr2a_conan\pr2a_conan" -B "C:\Users\usuariopc\Desktop\Colegio\Uni\3º\1º\IGV\Practicas\Practica 2\pr2a_conan\pr2a_conan\cmake-build-debug"
--- The C compiler identification is GNU 13.1.0
--- The CXX compiler identification is GNU 13.1.0
--- Detecting C compiler ABI info
--- Detecting C compiler ABI info - done
--- Check for working C compiler: C:/Program Files/JetBrains/CLion 2023.2.1/bin/mingw/bin/gcc.exe - skipped
--- Detecting C compile features
--- Detecting C compile features - done
--- Detecting CXX compiler ABI info
--- Detecting CXX compiler ABI info - done
--- Check for working CXX compiler: C:/Program Files/JetBrains/CLion 2023.2.1/bin/mingw/bin/g++.exe - skipped
--- Detecting CXX compile features
--- Detecting CXX compile features - done
+C:\Users\admin\AppData\Local\Programs\CLion\bin\cmake\win\x64\bin\cmake.exe -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=C:/Users/admin/AppData/Local/Programs/CLion/bin/ninja/win/x64/ninja.exe -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -G Ninja -S C:\Users\admin\Downloads\Practicas_IGV-Practica2\Practicas_IGV-Practica2 -B C:\Users\admin\Downloads\Practicas_IGV-Practica2\Practicas_IGV-Practica2\cmake-build-debug
 -- CMake-Conan: first find_package() found. Installing dependencies with Conan
 -- CMake-Conan: Checking if a default profile exists
-C:\Users\usuariopc\.conan2\profiles\default
+C:\Users\admin\.conan2\profiles\default
 -- CMake-Conan: cmake_system_name=Windows
 -- CMake-Conan: cmake_system_processor=x86_64
 -- CMake-Conan: CMake compiler=GNU
 -- CMake-Conan: CMake compiler version=13.1.0
 -- CMake-Conan: [settings] compiler=gcc
 -- CMake-Conan: [settings] compiler.version=13
--- CMake-Conan: Creating profile C:/Users/usuariopc/Desktop/Colegio/Uni/3º/1º/IGV/Practicas/Practica 2/pr2a_conan/pr2a_conan/cmake-build-debug/conan_host_profile
+-- CMake-Conan: Creating profile C:/Users/admin/Downloads/Practicas_IGV-Practica2/Practicas_IGV-Practica2/cmake-build-debug/conan_host_profile
 -- CMake-Conan: Profile: 
-include(default)
 [settings]
 arch=x86_64
 os=Windows
 compiler=gcc
 compiler.version=13
 compiler.cppstd=14
+compiler.libcxx=libstdc++11
 build_type=Debug
 [conf]
 tools.cmake.cmaketoolchain:generator=Ninja
+tools.build:compiler_executables={"c":"C:/Users/admin/AppData/Local/Programs/CLion/bin/mingw/bin/gcc.exe","cpp":"C:/Users/admin/AppData/Local/Programs/CLion/bin/mingw/bin/g++.exe","rc":"C:/Users/admin/AppData/Local/Programs/CLion/bin/mingw/bin/windres.exe"}
 
--- CMake-Conan: Installing single configuration Debug
--- CMake-Conan: conan install C:/Users/usuariopc/Desktop/Colegio/Uni/3º/1º/IGV/Practicas/Practica 2/pr2a_conan/pr2a_conan -of=C:/Users/usuariopc/Desktop/Colegio/Uni/3º/1º/IGV/Practicas/Practica 2/pr2a_conan/pr2a_conan/cmake-build-debug/conan -pr;C:/Users/usuariopc/Desktop/Colegio/Uni/3º/1º/IGV/Practicas/Practica 2/pr2a_conan/pr2a_conan/cmake-build-debug/conan_host_profile;--build=missing;-g;CMakeDeps
+-- CMake-Conan: Installing configuration(s): Debug
+-- CMake-Conan: conan install C:/Users/admin/Downloads/Practicas_IGV-Practica2/Practicas_IGV-Practica2 -of=C:/Users/admin/Downloads/Practicas_IGV-Practica2/Practicas_IGV-Practica2/cmake-build-debug/conan --profile:host=default;--profile:host=C:/Users/admin/Downloads/Practicas_IGV-Practica2/Practicas_IGV-Practica2/cmake-build-debug/conan_host_profile;--profile:build=default;-s;build_type=Debug;--build=missing
 
 ======== Input profiles ========
 Profile host:
@@ -47,22 +36,24 @@ compiler.libcxx=libstdc++11
 compiler.version=13
 os=Windows
 [conf]
+tools.build:compiler_executables={'c': 'C:/Users/admin/AppData/Local/Programs/CLion/bin/mingw/bin/gcc.exe', 'cpp': 'C:/Users/admin/AppData/Local/Programs/CLion/bin/mingw/bin/g++.exe', 'rc': 'C:/Users/admin/AppData/Local/Programs/CLion/bin/mingw/bin/windres.exe'}
 tools.cmake.cmaketoolchain:generator=Ninja
 
 Profile build:
 [settings]
 arch=x86_64
 build_type=Release
-compiler=gcc
-compiler.cppstd=gnu17
-compiler.libcxx=libstdc++11
-compiler.version=13
+compiler=msvc
+compiler.cppstd=14
+compiler.runtime=dynamic
+compiler.runtime_type=Release
+compiler.version=194
 os=Windows
 
 
 ======== Computing dependency graph ========
 Graph root
-    conanfile.py: C:/Users/usuariopc/Desktop/Colegio/Uni/3║/1║/IGV/Practicas/Practica 2/pr2a_conan/pr2a_conan\conanfile.py
+    conanfile.py: C:/Users/admin/Downloads/Practicas_IGV-Practica2/Practicas_IGV-Practica2\conanfile.py
 Requirements
     freeglut/3.4.0#5674e666d6bb21d45e778c6b710a213d - Cache
     glu/system#a5189f60c8270ac97ed29d7f36fffe39 - Cache
@@ -72,7 +63,7 @@ Requirements
 
 ======== Computing necessary packages ========
 Requirements
-    freeglut/3.4.0#5674e666d6bb21d45e778c6b710a213d:1369079bc143c17932bb06e372788a53c929c21e#89f70105e8df10e4461fd1c6d8774437 - Cache
+    freeglut/3.4.0#5674e666d6bb21d45e778c6b710a213d:1369079bc143c17932bb06e372788a53c929c21e#bf9f358a29cb40b75df6c9b6d9ad18f8 - Cache
     glu/system#a5189f60c8270ac97ed29d7f36fffe39:da39a3ee5e6b4b0d3255bfef95601890afd80709#0ba8627bd47edc3a501e8f0eb9a79e5e - Cache
     khrplatform/cci.20200529#b1ab63bdc5fcef59f4cb2b96749a61cc:da39a3ee5e6b4b0d3255bfef95601890afd80709#f6ca34b0055eeb66de8e0cb09c284e44 - Cache
     opengl-registry/cci.20220929#fda1f167ad89f7bc2c21e99998c351dc:da39a3ee5e6b4b0d3255bfef95601890afd80709#26f580fe059036ad87647726361c788f - Cache
@@ -89,7 +80,7 @@ WARN: deprecated:     'cpp_info.filenames' used in: opengl/system
 WARN: deprecated:     'cpp_info.names' used in: freeglut/3.4.0
 
 ======== Finalizing install (deploy, generators) ========
-conanfile.py: Writing generators to C:\Users\usuariopc\Desktop\Colegio\Uni\3║\1║\IGV\Practicas\Practica 2\pr2a_conan\pr2a_conan\cmake-build-debug\conan\build\Debug\generators
+conanfile.py: Writing generators to C:\Users\admin\Downloads\Practicas_IGV-Practica2\Practicas_IGV-Practica2\cmake-build-debug\conan\build\Debug\generators
 conanfile.py: Generator 'CMakeDeps' calling 'generate()'
 conanfile.py: CMakeDeps necessary find_package() and targets for your CMakeLists.txt
     find_package(opengl-registry)
@@ -97,17 +88,17 @@ conanfile.py: CMakeDeps necessary find_package() and targets for your CMakeLists
     find_package(opengl_system)
     target_link_libraries(... opengl-registry::opengl-registry FreeGLUT::freeglut_static opengl::opengl)
 conanfile.py: Calling generate()
-conanfile.py: Generators folder: C:\Users\usuariopc\Desktop\Colegio\Uni\3║\1║\IGV\Practicas\Practica 2\pr2a_conan\pr2a_conan\cmake-build-debug\conan\build\Debug\generators
+conanfile.py: Generators folder: C:\Users\admin\Downloads\Practicas_IGV-Practica2\Practicas_IGV-Practica2\cmake-build-debug\conan\build\Debug\generators
 conanfile.py: CMakeToolchain generated: conan_toolchain.cmake
 conanfile.py: CMakeToolchain: Preset 'conan-debug' added to CMakePresets.json.
     (cmake>=3.23) cmake --preset conan-debug
     (cmake<3.23) cmake <path> -G Ninja -DCMAKE_TOOLCHAIN_FILE=generators\conan_toolchain.cmake  -DCMAKE_POLICY_DEFAULT_CMP0091=NEW -DCMAKE_BUILD_TYPE=Debug
-conanfile.py: CMakeToolchain generated: C:\Users\usuariopc\Desktop\Colegio\Uni\3║\1║\IGV\Practicas\Practica 2\pr2a_conan\pr2a_conan\cmake-build-debug\conan\build\Debug\generators\CMakePresets.json
+conanfile.py: CMakeToolchain generated: C:\Users\admin\Downloads\Practicas_IGV-Practica2\Practicas_IGV-Practica2\cmake-build-debug\conan\build\Debug\generators\CMakePresets.json
 conanfile.py: Generating aggregated env files
 conanfile.py: Generated aggregated env files: ['conanbuild.bat', 'conanrun.bat']
 Install finished successfully
--- CMake-Conan: CONAN_GENERATORS_FOLDER=C:\Users\usuariopc\Desktop\Colegio\Uni\3º\1º\IGV\Practicas\Practica 2\pr2a_conan\pr2a_conan\cmake-build-debug\conan\build\Debug\generators
--- CMake-Conan: CONANFILE=C:/Users/usuariopc/Desktop/Colegio/Uni/3º/1º/IGV/Practicas/Practica 2/pr2a_conan/pr2a_conan/conanfile.py
+-- CMake-Conan: CONAN_GENERATORS_FOLDER=C:/Users/admin/Downloads/Practicas_IGV-Practica2/Practicas_IGV-Practica2/cmake-build-debug/conan/build/Debug/generators
+-- CMake-Conan: CONANFILE=C:/Users/admin/Downloads/Practicas_IGV-Practica2/Practicas_IGV-Practica2/conanfile.py
 -- Conan: Target declared 'opengl::opengl'
 -- CMake-Conan: find_package(opengl-registry) found, 'conan install' already ran
 -- Conan: Target declared 'opengl-registry::opengl-registry'
@@ -117,6 +108,6 @@ Install finished successfully
 -- Conan: Component target declared 'FreeGLUT::freeglut_static'
 -- CMake-Conan: find_package(glu) found, 'conan install' already ran
 -- Conan: Target declared 'glu::glu'
--- Configuring done (31.6s)
--- Generating done (0.1s)
--- Build files have been written to: C:/Users/usuariopc/Desktop/Colegio/Uni/3º/1º/IGV/Practicas/Practica 2/pr2a_conan/pr2a_conan/cmake-build-debug
+-- Configuring done (1.1s)
+-- Generating done (0.0s)
+-- Build files have been written to: C:/Users/admin/Downloads/Practicas_IGV-Practica2/Practicas_IGV-Practica2/cmake-build-debug
