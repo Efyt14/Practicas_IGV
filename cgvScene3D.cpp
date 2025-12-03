@@ -108,10 +108,10 @@ void cgvScene3D::paint_quad() {
 }
 
 void cgvScene3D::paint_quad(float div_x, float div_z) {
-    float ini_x = 0.0;
-    float ini_z = 0.0;
-    float tam_x = 5.0;
-    float tam_z = 5.0;
+    float ini_x = -1.0;
+    float ini_z = -1.0;
+    float tam_x = 2.0;
+    float tam_z = 2.0;
 
     float longX = tam_x / div_x;
     float longZ = tam_z / div_z;
