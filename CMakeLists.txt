@@ -18,7 +18,18 @@ add_executable(${PROJECT_NAME}
         cgvTriangleMesh.h
         cgvPoint3D.cpp
         cgvPoint3D.h
-        pr2a.cpp)
+        pr2a.cpp
+        pr2a.cpp
+        cgvColor.cpp
+        cgvColor.h
+        cgvLightSource.cpp
+        cgvLightSource.h
+        cgvMaterial.cpp
+        cgvMaterial.h
+        cgvTexture.cpp
+        cgvTexture.h
+        lodepng.cpp
+        lodepng.h)
 
 if (LINUX)
     find_path(OPENGL_REGISTRY_INCLUDE_DIRS "GL/glcorearb.h")

@@ -9,7 +9,7 @@ int main ( int argc, char **argv )
    cgvInterface::getInstance().configure_environment ( argc, argv
                                                   , 500, 500 // window size
                                                   , 100, 100 // window position
-                                                  , "IG&V. Practice 2A." // window title
+                                                  , "IG&V. Practice 3." // window title
     );
 
    // set the callback functions for event management

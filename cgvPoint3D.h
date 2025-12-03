@@ -1,5 +1,5 @@
-#ifndef __IGVPUNTO3D
-#define __IGVPUNTO3D
+#ifndef __CGVPOINT3D
+#define __CGVPOINT3D
 
 #if defined(__APPLE__) && defined(__MACH__)
 #include <GLUT/glut.h>
@@ -11,71 +11,69 @@
 
 #endif   // defined(__APPLE__) && defined(__MACH__)
 
-#define IGV_EPSILON 0.000001 ///< Constante para comparaciones con 0
+#define CGV_EPSILON 0.000001 ///< Constant for comparisons with 0
 
 #ifndef __ENUM_XYZ
 #define __ENUM_XYZ
 
 /**
- * Tags for point/vector coordinates
- */
+* Labels for point/vector coordinates
+*/
 enum Coordinates
-{  X   ///< X coordinate
-   , Y   ///< Y coordinate
-   , Z   ///< Z coordinate
+{
+    X ///< X Coordinate
+, Y ///< Y Coordinate
+, Z ///< Z Coordinate
 };
-#endif   // __ENUM_XYZ
+
+#endif // __ENUM_XYZ
 
 /**
- * Objects of this class represent points and vectors in 3D.
- */
-class cgvPoint3D
-{  private:
-      double c[3] = {0,0,0}; ///< x, y, z components of the point or vector
+* Objects of this class represent points and vectors in 3D
+*/
+class cgvPoint3D {
+private:
+    double c[3] = {0,0,0}; ///< Components x, y, z of the point or vector
 
-   public:
-      // Constructors
-      /// Default constructor
-      cgvPoint3D () = default;
-      cgvPoint3D ( const double &x, const double &y, const double &z );
-      // Copy constructor
-      cgvPoint3D ( const cgvPoint3D &p );
+public:
+    // Constructors
+    /// Default constructor
+    cgvPoint3D() = default;
+    cgvPoint3D ( const double &x, const double &y, const double &z );
 
-      // Assignment operator
-      cgvPoint3D &operator= ( const cgvPoint3D &p );
+    // Copy constructor
+    cgvPoint3D ( const cgvPoint3D &p );
 
-      /// Destructor
-      ~cgvPoint3D () = default;
+    // Assignment operator
+    cgvPoint3D &operator= ( const cgvPoint3D &p );
 
-      // Operators
-      double &operator[] ( const unsigned char idx );
-
-      double operator[] ( const unsigned char idx ) const;
-
-      bool operator== ( const cgvPoint3D &p );
-
-      bool operator!= ( const cgvPoint3D &p );
-
-      void set ( const double &x, const double &y, const double &z );
+    /// Destroyer
+    ~cgvPoint3D () = default;
+    double &operator[] ( const unsigned char idx );
+    double operator[] ( const unsigned char idx ) const;
+    bool operator== ( const cgvPoint3D &p );
+    bool operator!= ( const cgvPoint3D &p );
+    void set ( const double &x, const double &y, const double &z );
+    float *cloneToFloatArray () const; //Returns the point in a float array
 };
 
 /**
- * Access to a point/vector coordinate
- * @param idx Coordinate to be accessed (0, 1, or 2)
- * @return The corresponding coordinate
- * @pre It is assumed that the parameter value is correct
- */
+* Accessing a point/vector coordinate
+* @param idx Coordinate to access (0, 1, or 2)
+* @return The corresponding coordinate
+* @pre Assumes the parameter value is correct
+*/
 inline double &cgvPoint3D::operator[] ( const unsigned char idx )
 {  return c[idx];
 }
 
 /**
- * Access to a point/vector coordinate
- * @param idx Coordinate to be accessed (0, 1, or 2)
- * @return The corresponding coordinate
- * @pre It is assumed that the parameter value is correct
- */
+* Accessing a point/vector coordinate
+* @param idx Coordinate to access (0, 1, or 2)
+* @return The corresponding coordinate
+* @pre Assumes the parameter value is correct
+*/
 inline double cgvPoint3D::operator[] ( const unsigned char idx ) const
 {  return c[idx];
 }
-#endif   // __CGVPOINTO3D
+#endif   // __CGVPOINT3D

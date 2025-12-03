@@ -23,8 +23,8 @@ cgvCylinder::cgvCylinder() : cgvTriangleMesh()
 */
 cgvCylinder::cgvCylinder(float r, float a, int divU, int divV)
 {
-    // TODO: Section B: Construct the triangle mesh to represent the cylinder
-    // TODO: Section C: Add the normal vector
+    // Section B: Construct the triangle mesh to represent the cylinder
+    // Section C: Add the normal vector
 
     if (divU < 3) divU = 3;
     if (divV < 1) divV = 1;

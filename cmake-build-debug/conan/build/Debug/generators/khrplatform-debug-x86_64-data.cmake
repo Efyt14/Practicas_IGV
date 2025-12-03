@@ -11,7 +11,7 @@ endif()
 
 ########### VARIABLES #######################################################################
 #############################################################################################
-set(khrplatform_PACKAGE_FOLDER_DEBUG "C:/Users/usuariopc/.conan2/p/khrpl54278e0c9b4ae/p")
+set(khrplatform_PACKAGE_FOLDER_DEBUG "C:/Users/admin/.conan2/p/khrpl54278e0c9b4ae/p")
 set(khrplatform_BUILD_MODULES_PATHS_DEBUG )
 
 
