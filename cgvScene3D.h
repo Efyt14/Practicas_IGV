@@ -43,7 +43,7 @@ private:
     int currentScene;
 
     //Practica 3
-    cgvLightSource *lightbulb, *spotlight;
+    cgvLightSource *lightbulb, *spotlight, *ambient, *diffuse;
     cgvMaterial *material;
     cgvTexture *texture;
 
@@ -168,7 +168,9 @@ public:
     cgvLightSource *getSpotlight() { return spotlight;}
     cgvMaterial *getMaterial() { return material;}
 
+    cgvTexture *getTexture() const;
 
+    void setTexture(cgvTexture *texture);
 
 private:
     void paint_axes ();

@@ -179,6 +179,15 @@ void cgvInterface::keyboardFunc(unsigned char key, int x, int y)
             _instance->scene.incrZ();
             break;
         case 'Z':
+            if (scene == 2) {
+                if (_instance->scene.getObjetoSeleccionado() == 1) {
+                    _instance->scene.selected = 0;
+                    _instance->scene.applyRotation(0, 0, ROT_STEP);
+                } else {
+                    _instance->scene.selected = 1;
+                    _instance->scene.applyRotation(0, 0, ROT_STEP);
+                }
+            }
             _instance->scene.decrZ();
             break;
         case 's':
@@ -287,28 +296,44 @@ void cgvInterface::keyboardFunc(unsigned char key, int x, int y)
 
             //ONLY SCENE 3
         case 'd': // Section E: Increase the R component of the material's diffuse coefficient by 0.1
-            if (scene == 3)
-            _instance->scene.getMaterial()->incrementDiffuse(0.1);
+            if (scene == 3) {
+                _instance->scene.getMaterial()->incrementDiffuse(0.1);
+            }
             break;
         case 'D': // Section E: Decrease the R component of the material's diffuse coefficient by 0.1
-            if (scene == 3)
-            _instance->scene.getMaterial()->incrementDiffuse(-0.1);
+            if (scene == 3) {
+                _instance->scene.getMaterial()->incrementDiffuse(-0.1);
+            }
             break;
         case 'r': // Section E: Increase the R component of the material's specular coefficient by 0.1
-            if (scene == 3)
-            _instance->scene.getMaterial()->incrementSpecular(0.1);
+            if (scene == 3) {
+                _instance->scene.getMaterial()->incrementSpecular(0.1);
+            }
             break;
         case 'R': // Section E: Decrease the R component of the material's specular coefficient by 0.1
-            if (scene == 3)
-            _instance->scene.getMaterial()->incrementSpecular(-0.1);
+            if (scene == 3) {
+                _instance->scene.getMaterial()->incrementSpecular(-0.1);
+            }
             break;
         case 'p': // Section E: Increase the Phong exponent of the material by 10
-            if (scene == 3)
-            _instance->scene.getMaterial()->incrementExpPhong(10);
+            if (scene == 3) {
+                _instance->scene.getMaterial()->incrementExpPhong(10);
+            }
             break;
         case 'P': // Section E: Decrease the Phong exponent of the material by 10
-            if (scene == 3)
-            _instance->scene.getMaterial()->incrementExpPhong(-10);
+            if (scene == 3) {
+                _instance->scene.getMaterial()->incrementExpPhong(-10);
+            }
+            break;
+        case 'i':
+            if(scene == 3) {
+                _instance->scene.getSpotlight()->move(0, 0, 0.2);
+            }
+            break;
+        case 'I':
+            if(scene == 3) {
+                _instance->scene.getSpotlight()->move(0, 0, -0.2);
+            }
             break;
     }
     glutPostRedisplay(); // refresh the viewport content
@@ -738,6 +763,11 @@ void cgvInterface::create_menu() {
         glutAddMenuEntry("MIN: GL_NEAREST", 63);
         glutAddMenuEntry("MIN: GL_LINEAR", 64);
 
+        int lightningMenu = glutCreateMenu(menuHandle);
+        glutAddMenuEntry("Spotlight", 71);
+        glutAddMenuEntry("Directional Light", 72);
+        glutAddMenuEntry("Beam Light", 73);
+
         int menu_id = glutCreateMenu(menuHandle);
         glutAddMenuEntry("Escena A", 1);
         glutAddMenuEntry("Escena B", 2);
@@ -746,6 +776,7 @@ void cgvInterface::create_menu() {
         glutAddSubMenu("Textures", texturesMenu);
         glutAddSubMenu("Materials", materialsMenu);
         glutAddSubMenu("Texture Filtering", filteringMenu);
+        glutAddSubMenu("Lightning", lightningMenu);
 
         glutAttachMenu(GLUT_RIGHT_BUTTON);
     }else{
@@ -758,6 +789,7 @@ void cgvInterface::create_menu() {
     }
 }
 
+//FIXME falta añadir todos los filtros y todos los materiales y todas las luces
 void cgvInterface::menuHandle(int value)
 {
     switch (value)
@@ -777,6 +809,23 @@ void cgvInterface::menuHandle(int value)
             _instance->scene.renderSceneC();
             _instance->create_menu();
             break;
+        case 41:
+            _instance->scene.setTexture(new cgvTexture((char *) "../chess.png")); // Only load it once
+            glEnable(GL_TEXTURE_2D);
+            _instance->scene.getTexture()->apply();
+            break;
+        case 42:
+            _instance->scene.setTexture(new cgvTexture((char *) "../mushroom.png")); // Only load it once
+            glEnable(GL_TEXTURE_2D);
+            _instance->scene.getTexture()->apply();
+            break;
+        case 43:
+            _instance->scene.setTexture(new cgvTexture((char *) "../wood.png")); // Only load it once
+            glEnable(GL_TEXTURE_2D);
+            _instance->scene.getTexture()->apply();
+            break;
+        case 44:
+            glDisable(GL_TEXTURE_2D);
+            break;
     }
 }
-

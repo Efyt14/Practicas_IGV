@@ -516,11 +516,6 @@ void cgvScene3D::display( void )
             the R component of the specular coefficient, and the Phong exponent, with the value
             of the corresponding attribute of the igvScene class */
 
-            if(texture==nullptr){
-                texture = new cgvTexture((char *) "../chess.png"); // Only load it once //FIXME poner la foto que quieras
-            }
-            glEnable(GL_TEXTURE_2D);
-            texture->apply();
             paint_quad(50, 50);
 
             glPushMatrix();
@@ -1089,14 +1084,10 @@ void cgvScene3D::applyRotation(float rx, float ry, float rz) {
     transforms[idx].rz += rz;
 }
 
-void cgvScene3D::renderSceneContent()
-{
-    if (axes)
-        paint_axes();
-    if (currentScene == 1)
-        renderSceneA();
-    else if (currentScene == 2)
-        renderSceneB();
-    else if (currentScene == 3)
-        renderSceneC();
+cgvTexture *cgvScene3D::getTexture() const {
+    return texture;
+}
+
+void cgvScene3D::setTexture(cgvTexture *texture) {
+    cgvScene3D::texture = texture;
 }
