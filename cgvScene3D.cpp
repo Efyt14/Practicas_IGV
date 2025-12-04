@@ -377,6 +377,9 @@ void cgvScene3D::drawLogo(float lenght) {
  */
 void cgvScene3D::display( void )
 {
+    GLfloat resetEmission[] = {0.0f, 0.0f, 0.0f, 1.0f};
+    glMaterialfv(GL_FRONT, GL_EMISSION, resetEmission);
+
     // Siempre mantenemos un push/pop global bien balanceado para no corromper la pila.
     glPushMatrix();
 
@@ -393,18 +396,37 @@ void cgvScene3D::display( void )
         GLfloat light0[4] = { 2.0, 2.5, 3.0, 1 };
         glLightfv ( GL_LIGHT0, GL_POSITION, light0 );
         glEnable(GL_LIGHT0);
-        glMaterialfv ( GL_FRONT, GL_EMISSION, mesh_colour );
+        glMaterialfv(GL_FRONT, GL_AMBIENT, mesh_colour);
     }
 
     // paint the axes
     if (axes) paint_axes();
 
-
-
     // create the model - rotaciones globales (APLICADAS SIEMPRE)
     glRotatef(rotX, 1, 0, 0);
     glRotatef(rotY, 0, 1, 0);
     glRotatef(rotZ, 0, 0, 1);
+
+    //Que las texturas e iluminaciones se hagan unicamnete en la escena 3
+    if (currentScene != 3){
+        glDisable(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+        //Restaurar material neutro
+        GLfloat defaultAmbient[4] = {0.2f, 0.2f, 0.2f, 1.0f};
+        GLfloat defaultDiffuse[4] = {0.8f, 0.8f, 0.8f, 1.0f};
+        GLfloat defaultSpecular[4] = {0.0f, 0.0f, 0.0f, 1.0f};
+        GLfloat defaultShine = 0.0f;
+        glMaterialfv(GL_FRONT, GL_AMBIENT, defaultAmbient);
+        glMaterialfv(GL_FRONT, GL_DIFFUSE, defaultDiffuse);
+        glMaterialfv(GL_FRONT, GL_SPECULAR, defaultSpecular);
+        glMaterialfv(GL_FRONT, GL_SHININESS, &defaultShine);
+
+        // Mantén GL_LIGHT0 siempre, apaga el resto
+        for (int i = GL_LIGHT1; i <= GL_LIGHT7; i++)
+            glDisable(i);
+        glDisable(GL_COLOR_MATERIAL);
+    }
 
     // Switch por escenas (mantenemos transformaciones y order coherente
     switch (currentScene)
@@ -497,6 +519,7 @@ void cgvScene3D::display( void )
             if(texture==nullptr){
                 texture = new cgvTexture((char *) "../chess.png"); // Only load it once //FIXME poner la foto que quieras
             }
+            glEnable(GL_TEXTURE_2D);
             texture->apply();
             paint_quad(50, 50);
 
