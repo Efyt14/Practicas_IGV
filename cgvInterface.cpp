@@ -720,11 +720,42 @@ void cgvInterface::set_window_height ( int _window_height )
 
 
 void cgvInterface::create_menu() {
-    int menu_id = glutCreateMenu(menuHandle);
-    glutAddMenuEntry("Escena A", 1);
-    glutAddMenuEntry("Escena B", 2);
-    glutAddMenuEntry("Escena C", 3);
-    glutAttachMenu(GLUT_RIGHT_BUTTON);
+    if(_instance->scene.getCurrentScene() == 3) {
+        int texturesMenu = glutCreateMenu(menuHandle);
+        glutAddMenuEntry("Textures 1", 41);
+        glutAddMenuEntry("Textures 2", 42);
+        glutAddMenuEntry("Textures 3", 43);
+        glutAddMenuEntry("No texture", 44);
+
+        int materialsMenu = glutCreateMenu(menuHandle);
+        glutAddMenuEntry("Material 1", 51);
+        glutAddMenuEntry("Material 2", 52);
+        glutAddMenuEntry("Material 3", 53);
+
+        int filteringMenu = glutCreateMenu(menuHandle);
+        glutAddMenuEntry("MAG: GL_NEAREST", 61);
+        glutAddMenuEntry("MAG: GL_LINEAR", 62);
+        glutAddMenuEntry("MIN: GL_NEAREST", 63);
+        glutAddMenuEntry("MIN: GL_LINEAR", 64);
+
+        int menu_id = glutCreateMenu(menuHandle);
+        glutAddMenuEntry("Escena A", 1);
+        glutAddMenuEntry("Escena B", 2);
+        glutAddMenuEntry("Escena C", 3);
+
+        glutAddSubMenu("Textures", texturesMenu);
+        glutAddSubMenu("Materials", materialsMenu);
+        glutAddSubMenu("Texture Filtering", filteringMenu);
+
+        glutAttachMenu(GLUT_RIGHT_BUTTON);
+    }else{
+        int menu_id = glutCreateMenu(menuHandle);
+        glutAddMenuEntry("Escena A", 1);
+        glutAddMenuEntry("Escena B", 2);
+        glutAddMenuEntry("Escena C", 3);
+
+        glutAttachMenu(GLUT_RIGHT_BUTTON);
+    }
 }
 
 void cgvInterface::menuHandle(int value)
@@ -734,14 +765,17 @@ void cgvInterface::menuHandle(int value)
         case 1:
             std::cout << "Menu option 1 selected\n"; //Log pq no me carga
             _instance->scene.renderSceneA();
+            _instance->create_menu();
             break;
         case 2:
             std::cout << "Menu option 2 selected\n"; //Log pq no me carga
             _instance->scene.renderSceneB();
+            _instance->create_menu();
             break;
         case 3:
             std::cout << "Menu option 3 selected\n"; //Log pq no me carga
             _instance->scene.renderSceneC();
+            _instance->create_menu();
             break;
     }
 }

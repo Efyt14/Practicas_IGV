@@ -495,7 +495,7 @@ void cgvScene3D::display( void )
             of the corresponding attribute of the igvScene class */
 
             if(texture==nullptr){
-                texture = new cgvTexture((char *) "../map.png"); // Only load it once //FIXME poner la foto que quieras
+                texture = new cgvTexture((char *) "../chess.png"); // Only load it once //FIXME poner la foto que quieras
             }
             texture->apply();
             paint_quad(50, 50);
