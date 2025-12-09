@@ -1,21 +1,35 @@
 cmake_minimum_required(VERSION 3.25)
-project(pr1)
+project(pr2a_conan)
 
 set(CMAKE_CXX_STANDARD 14)
 
 include_directories(.)
 
 add_executable(${PROJECT_NAME}
-        cgvInterface.cpp
-        cgvInterface.h
-        pr2.cpp
-        cgvInterface.cpp
+        cgvCamera.cpp
+        cgvCamera.h
+        cgvCylinder.cpp
+        cgvCylinder.h
         cgvScene3D.cpp
         cgvScene3D.h
-        cgvPoint.h
-        cgvCamera.h
-        cgvPoint.cpp
-        cgvCamera.cpp)
+        cgvInterface.cpp
+        cgvInterface.h
+        cgvTriangleMesh.cpp
+        cgvTriangleMesh.h
+        cgvPoint3D.cpp
+        cgvPoint3D.h
+        pr2a.cpp
+        pr2a.cpp
+        cgvColor.cpp
+        cgvColor.h
+        cgvLightSource.cpp
+        cgvLightSource.h
+        cgvMaterial.cpp
+        cgvMaterial.h
+        cgvTexture.cpp
+        cgvTexture.h
+        lodepng.cpp
+        lodepng.h)
 
 if (LINUX)
     find_path(OPENGL_REGISTRY_INCLUDE_DIRS "GL/glcorearb.h")

@@ -1,359 +1,412 @@
 #include <cstdlib>
+#include <stdio.h>
+#include <iostream>
 
 #include "cgvInterface.h"
 
-cgvInterface interface;
-
-
-//NOTE REFACTORIZAR TODO LO QUE TENGA INSTANCE POR INTERFACE
-
+// Application of the Singleton design pattern
 cgvInterface* cgvInterface::_instance = nullptr;
-
-// Constructor Methods -----------------------------------
-
-/**
-* Default constructor
-*/
-cgvInterface::cgvInterface(): menuSelection(scene.SceneA), pos(1), windowChange(false) {}
-
 
 // Public methods ----------------------------------------
 
 /**
-* Method to access the class's singleton object, applying the Singleton
-* design pattern
-* @return A reference to the class's singleton object
-*/
-cgvInterface& cgvInterface::getInstance()
-{ if ( !_instance )
-    { _instance = new cgvInterface;
+ * Method for accessing the single object of the class, applying the Singleton design pattern.
+ * @return A reference to the single object of the class.
+ */
+cgvInterface& cgvInterface::getInstance ()
+{  if ( !_instance )
+    {  _instance = new cgvInterface;
     }
 
     return *_instance;
 }
 
 /**
-* Initializes all parameters to create a display window
-* @param argc Number of parameters per command line when running the
-* application
-* @param argv Parameters per command line when running the application
-* @param _window_width Initial width of the display window
-* @param _window_height Initial height of the display window
-* @param _pos_X X coordinate of the initial position of the display * window
-* @param _pos_Y Y coordinate of the initial position of the display * window
-* @param _title Title of the display window
-* @pre All parameters are assumed to be Parameters have valid values
-* @post Changes the height and width of the window stored in the object
-*/
-void cgvInterface::configure_environment (int argc, char** argv
-        , int _window_width, int _window_height
-        , int _x_pos, int _y_pos
+ * Creates the world displayed in the window
+ */
+void cgvInterface::create_world ()
+{  // starts the camera
+    _instance->camera.set ( CGV_PARALLEL, { 3.0, 2.0, 4 }, { 0, 0, 0 }
+            , { 0, 1.0, 0 }, -1 * 1.5, 1 * 1.5, -1 * 1.5, 1 * 1.5
+            , -1 * 3, 200 );
+}
+
+
+
+/**
+ * Initialises all parameters to create a display window.
+ * @param argc Number of parameters per command line when executing the application.
+ *             application.
+ * @param argv Command line parameters when running the application.
+ * @param _window_width Initial width of the display window.
+ * @param _window_height Initial height of the display window.
+ * @param _pos_X X coordinate of the initial position of the display window.
+ *               display window
+ * @param _pos_Y Y coordinate of the initial position of the
+ *               display window
+ * @param _title Title of the display window
+ * @pre It is assumed that all parameters have valid values
+ * @post Changes the height and width of the window stored in the object
+ */
+void cgvInterface::configure_environment ( int argc, char **argv, int _window_width
+        , int _window_height, int _pos_X, int _pos_Y
         , std::string _title )
-{ // initialize interface attributes
+{
+    // initialisation of interface variables
     window_width = _window_width;
     window_height = _window_height;
 
-// initialize the display window
+    // initialisation of display window
     glutInit ( &argc, argv );
     glutInitDisplayMode ( GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH );
     glutInitWindowSize ( _window_width, _window_height );
-    glutInitWindowPosition ( _x_pos, _y_pos );
-    glutCreateWindow( _title.c_str() );
+    glutInitWindowPosition ( _pos_X, _pos_Y );
+    glutCreateWindow ( _title.c_str () );
 
-    create_menu();
-
-    glEnable( GL_DEPTH_TEST ); // enable z-buffer surface hiding
-    glClearColor( 1.0, 1.0, 1.0, 0.0 ); // set the window background color
-
-    glEnable( GL_LIGHTING ); // enable scene lighting
-    glEnable( GL_NORMALIZE ); // normalize normal vectors for lighting calculations
-
-    createWorld();// Añadido para la practica 2, crear la escena de la camara que mire los objetos
+    glEnable ( GL_DEPTH_TEST ); // activates z-buffer surface hiding
+    glClearColor( 1.0, 1.0, 1.0, 0.0 ); // sets the window background colour
+    glEnable(GL_LIGHTING); // activates scene lighting
+    glEnable(GL_NORMALIZE); // normalises normal vectors for lighting calculation
+    glEnable(GL_TEXTURE_2D); // Enables the use of textures
+    create_world(); // creates the world to be displayed in the window
 }
 
 /**
-* Creates a menu bound to the right mouse button
-*/
-void cgvInterface::create_menu ()
-{ int menu_id = glutCreateMenu ( menuHandle );
-    glutAddMenuEntry ( interface.scene.Scene_NameA
-            , interface.scene.SceneA );
-    glutAddMenuEntry ( interface.scene.Scene_NameB
-            , interface.scene.SceneB );
-    glutAddMenuEntry ( interface.scene.Scene_NameC
-            , interface.scene.SceneC );
-
-    glutAttachMenu ( GLUT_RIGHT_BUTTON );
+ * Method to display the scene and wait for events on the interface
+ */
+void cgvInterface::start_display_loop ()
+{  glutMainLoop (); // starts the GLUT display loop
 }
 
-/**
-* Method to display the scene and wait for events on the interface
-*/
-void cgvInterface::start_display_loop()
-{ glutMainLoop(); // starts the GLUT display loop
-}
 
 /**
-* Method for handling keyboard events
-* @param key Code of the key pressed
-* @param x X coordinate of the mouse cursor position at the time of the
-* keyboard event
-* @param y Y coordinate of the mouse cursor position at the time of the
-* keyboard event
-* @pre All parameters are assumed to have valid values
-* @post The scene may change depending on the key pressed
-*/
-void cgvInterface::keyboardFunc (unsigned char key, int x, int y) {
+ * Method for controlling keyboard events
+ * @param key Code of the key pressed
+ * @param x X coordinate of the mouse cursor position at the time of the
+ *          keyboard event
+ * @param y Y coordinate of the mouse cursor position at the time of the
+ *          keyboard event
+ * @pre All parameters are assumed to have valid values
+ * @post Class attributes may change, depending on the key pressed
+ */
+
+void cgvInterface::keyboardFunc(unsigned char key, int x, int y)
+{
     const float TRANSL_STEP = 0.1f;
     const float ROT_STEP = 5.0f; // degrees
     const float SCALE_UP = 1.1f;
     const float SCALE_DOWN = 0.9f;
 
+    int scene = _instance->scene.getCurrentScene();
 
-    switch ( key ) {
-        case 'e':
-        case 'E':
-            interface.scene.set_axes(!interface.scene.get_axes());
-            break;
-
-
-        case '1': // select Scene A / object 0
-            interface.menuSelection = interface.scene.SceneA;
-            interface.scene.selected = 0;
-            break;
-        case '2':
-            interface.menuSelection = interface.scene.SceneB;
-            interface.scene.selected = 1;
-            break;
-        case '3':
-            interface.menuSelection = interface.scene.SceneC;
-            interface.scene.selected = 2;
-            break;
-
-
-        case 27:
-            exit(1);
-            break; // ESC
-
-            // Traslación en Y
+    switch (key)
+    {
+        // --- CONTROLES GLOBALES ---
         case 'u':
-            interface.scene.applyTranslation(0.0f, TRANSL_STEP, 0.0f);
+            _instance->scene.applyTranslation(0.0f, TRANSL_STEP, 0.0f);
             break;
         case 'U':
-            interface.scene.applyTranslation(0.0f, -TRANSL_STEP, 0.0f);
+            _instance->scene.applyTranslation(0.0f, -TRANSL_STEP, 0.0f);
             break;
-
-
-            // Rotación
+        case 'w':
+            if (scene == 3) {
+                _instance->scene.incrX();
+            }
+            break;
+        case 'W':
+            if (scene == 3) {
+                _instance->scene.decrX();
+            }
+            break;
         case 'x':
-            interface.scene.applyRotation(ROT_STEP, 0, 0);
+            if (scene == 3) {
+                _instance->scene.addCoin();
+            } else {
+                _instance->scene.incrX();
+            }
             break;
         case 'X':
-            interface.scene.applyRotation(-ROT_STEP, 0, 0);
+            if (scene == 3) {
+                _instance->scene.removeCoin();
+            } else {
+                if (scene == 2) {
+                    if (_instance->scene.getObjetoSeleccionado() == 1) {
+                        _instance->scene.selected = 0;
+                        _instance->scene.applyRotation(ROT_STEP, 0, 0);
+                    } else {
+                        _instance->scene.selected = 1;
+                        _instance->scene.applyRotation(ROT_STEP, 0, 0);
+                    }
+                }
+                _instance->scene.decrX();
+            }
             break;
         case 'y':
-        case 'Y':
-            if (interface.camera.interactiveMode) {
-                //Practica 2
-                // Si el modo interactivo está activo, rota la cámara
-                if (key == 'y') {
-                    interface.camera.rotateY(0.05f);
-                } else {
-                    interface.camera.rotateY(-0.05f);
-                }
-                interface.camera.apply();
+            if (_instance->camera.interactiveMode) {
+                _instance->camera.rotateY(0.05f);
+                _instance->camera.apply();
             } else {
-                // Si no, rota la escena como antes
-                if (key == 'y') {
-                    interface.scene.applyRotation(0, ROT_STEP, 0);
+                _instance->scene.incrY();
+            }
+            break;
+        case 'Y':
+            if (_instance->camera.interactiveMode) {
+                _instance->camera.rotateY(-0.05f);
+                _instance->camera.apply();
+            } else {
+                if (scene == 2) {
+                    if (_instance->scene.getObjetoSeleccionado() == 1) {
+                        _instance->scene.selected = 0;
+                        _instance->scene.applyRotation(0, ROT_STEP, 0);
+                    } else {
+                        _instance->scene.selected = 1;
+                        _instance->scene.applyRotation(0, ROT_STEP, 0);
+                    }
                 }
-                else {
-                    interface.scene.applyRotation(0, -ROT_STEP, 0);
-                }
+                _instance->scene.decrY();
             }
             break;
         case 'z':
-            interface.scene.applyRotation(0, 0, ROT_STEP);
+            if (scene == 2) {
+                if (_instance->scene.getObjetoSeleccionado() == 1) {
+                    _instance->scene.selected = 0;
+                    _instance->scene.applyRotation(0, 0, ROT_STEP);
+                } else {
+                    _instance->scene.selected = 1;
+                    _instance->scene.applyRotation(0, 0, ROT_STEP);
+                }
+            }
+            _instance->scene.incrZ();
             break;
         case 'Z':
-            interface.scene.applyRotation(0, 0, -ROT_STEP);
+            if (scene == 2) {
+                if (_instance->scene.getObjetoSeleccionado() == 1) {
+                    _instance->scene.selected = 0;
+                    _instance->scene.applyRotation(0, 0, ROT_STEP);
+                } else {
+                    _instance->scene.selected = 1;
+                    _instance->scene.applyRotation(0, 0, ROT_STEP);
+                }
+            }
+            _instance->scene.decrZ();
             break;
-
-            // Escalado
         case 's':
-            interface.scene.applyScaling(SCALE_UP);
+            _instance->scene.applyScaling(SCALE_UP);
             break;
         case 'S':
-            interface.scene.applyScaling(SCALE_DOWN);
+            _instance->scene.applyScaling(SCALE_DOWN);
             break;
-
-            // Cambio de modo
-        case 'm':
-            interface.scene.deferredMode = false; // libre
-            // Al cambiar a libre, si había acumuladas, ejecutarlas
-            for (int i = 0; i < interface.scene.ops[interface.scene.selected].size(); ++i) {
-                std::function<void()>& op = interface.scene.ops[interface.scene.selected][i];
-                op();
-            }
-            interface.scene.ops[interface.scene.selected].clear();
+        case 'e': // Activar/desactivar ejes
+            _instance->scene.set_axes ( !_instance->scene.get_axes () );
             break;
-
-        case 'M':
-            interface.scene.deferredMode = true;  // diferido
+        case 'v':
+            _instance->camera.nextView();
             break;
-
-            //Practica 2
-
-        case 'p': // change the projection type from parallel to perspective and vice versa
-        case 'P':
-            if (interface.camera.type == CGV_PARALLEL) { // Perspective mode
-                interface.camera.set(CGV_PERSPECTIVE,
-                                     interface.camera.P0,
-                                     interface.camera.r,
-                                     interface.camera.V,
-                                     interface.camera.angle,
-                                     interface.camera.aspect,
-                                     interface.camera.znear,
-                                     interface.camera.zfar
-                );
-            } else {
-                interface.camera.set(CGV_PARALLEL,
-                                     interface.camera.P0,
-                                     interface.camera.r,
-                                     interface.camera.V,
-                                     interface.camera.xwmin,
-                                     interface.camera.xwmax,
-                                     interface.camera.ywmin,
-                                     interface.camera.ywmax,
-                                     interface.camera.znear,
-                                     interface.camera.zfar
-                );
-            }
-            interface.camera.apply();
-            break;
-
-        case 'v': // Change the camera position to display plan, profile, elevation, or perspective views
-        case 'V':
-            // mantener interface.pos entre 0..3 y actualizar la cámara en consecuencia TODO NO VA 😭😭, YA VA GRACIAS GEMA 😭😭
-            interface.pos = (interface.pos + 1) % 4;
-            interface.updateCamera(interface.pos);
-            break;
-
-            //Zooms
-        case '+': // zoom in
-            interface.camera.zoom(0.95);
-            interface.camera.apply();
-            break;
-        case '-': // zoom out
-            interface.camera.zoom(1.05);
-            interface.camera.apply();
-            break;
-
-            //Planes play
-        case 'n': // increase the distance of the near plane
-            interface.camera.znear += 0.2;
-            interface.camera.apply();
-            break;
-        case 'N': // decrease the distance of the near plane
-            interface.camera.znear -= 0.2;
-            interface.camera.apply();
-            break;
-
             // split the window into four views
         case '4':
-            interface.windowChange = !interface.windowChange;
+            _instance->windowChange = !_instance->windowChange;
+            break;
+        case 27: // Salir
+            exit(1);
             break;
 
-            //Camera type
-        case 'c':
-        case 'C':
-            interface.camera.toggleInteractive();
+            // --- SELECCIÓN DE OBJETO (Sólo Escena B) ---
+        case '1':
+            if (scene == 2) _instance->scene.setObjetoSeleccionado(1);
+            break;
+        case '2':
+            if (scene == 2) _instance->scene.setObjetoSeleccionado(2);
             break;
 
-            //Near and Far plane Play (F = N?)
-        case 'f':
-            interface.camera.moveNear(0.1);
-            break;
-        case 'F':
-            interface.camera.moveNear(-0.1);
+            // --- 'g' / 'G' (Solo Escena A) ---
+        case 'g':
+        case 'G':
+            if (scene == 1 && _instance->scene.getMesh() != nullptr) {
+                _instance->scene.getMesh()->changeShader();
+            }
+            if (scene == 3) {
+                _instance->activationCamera = !_instance->activationCamera;
+            }
             break;
 
-            //DISCLAIMER: Tarda mucho mucho en que el far plane corte la figura
+            // --- 'n' / 'N' (Escena A vs Escena B) ---
+        case 'n':
+            if (scene == 1 && _instance->scene.getMesh() != nullptr) {
+                _instance->scene.getMesh()->changeNormal(); // Práctica 1
+            } else if (scene == 2) {
+                _instance->scene.controlarParte(4, 5.0); // Práctica 2: Logo / Branquias V
+            }
+            break;
+        case 'N':
+            if (scene == 1 && _instance->scene.getMesh() != nullptr) {
+                _instance->scene.getMesh()->changeNormal(); // Práctica 1
+            } else if (scene == 2) {
+                _instance->scene.controlarParte(4, -5.0); // Práctica 2
+            }
+            break;
+
+            // --- 'b' / 'B' (Escena A vs Escena B) ---
         case 'b':
-            interface.camera.moveFar(0.75);
+            if (scene == 2) {
+                _instance->scene.controlarParte(1, 5.0); // Práctica 2: Base
+            }
             break;
         case 'B':
-            interface.camera.moveFar(-0.75);
+            if (scene == 2) {
+                _instance->scene.controlarParte(1, -5.0); // Práctica 2
+            }
+            break;
+
+            // --- 'c' / 'C' (Escena A vs Escena B) ---
+        case 'c':
+            if (scene == 2) {
+                _instance->scene.controlarParte(2, 5.0); // Práctica 2: Mástil / Cabeza
+            }
+            break;
+        case 'C':
+            if (scene == 2) {
+                _instance->scene.controlarParte(2, -5.0); // Práctica 2
+            }
+            break;
+
+            // --- 'm' / 'M' (Escena A vs Escena B) ---
+        case 'm':
+            if (scene == 2) {
+                _instance->scene.controlarParte(3, 5.0); // Práctica 2: Bandera / Branquias H
+            }
+            break;
+        case 'M':
+            if (scene == 2) {
+                _instance->scene.controlarParte(3, -5.0); // Práctica 2
+            }
+            break;
+        case 'A':
+        case 'a':
+            if (scene == 2){
+                _instance->scene.toggleAnimation();
+            }
+            if (scene == 3){
+                _instance->scene.toggleAnimation();
+            }
+            break;
+        case 'q':
+        case 'Q':
+            _instance->camera.toggleInteractive();
+            break;
+
+            //ONLY SCENE 3
+        case 'd': // Section E: Increase the R component of the material's diffuse coefficient by 0.1
+            if (scene == 3) {
+                _instance->scene.getMaterial()->incrementDiffuse(0.1);
+            }
+            break;
+        case 'D': // Section E: Decrease the R component of the material's diffuse coefficient by 0.1
+            if (scene == 3) {
+                _instance->scene.getMaterial()->incrementDiffuse(-0.1);
+            }
+            break;
+        case 'r': // Section E: Increase the R component of the material's specular coefficient by 0.1
+            if (scene == 3) {
+                _instance->scene.getMaterial()->incrementSpecular(0.1);
+            }
+            break;
+        case 'R': // Section E: Decrease the R component of the material's specular coefficient by 0.1
+            if (scene == 3) {
+                _instance->scene.getMaterial()->incrementSpecular(-0.1);
+            }
+            break;
+        case 'p': // Section E: Increase the Phong exponent of the material by 10
+            if (scene == 3) {
+                _instance->scene.getMaterial()->incrementExpPhong(10);
+            }
+            break;
+        case 'P': // Section E: Decrease the Phong exponent of the material by 10
+            if (scene == 3) {
+                _instance->scene.getMaterial()->incrementExpPhong(-10);
+            }
+            break;
+        case 'i':
+            if(scene == 3 && _instance->scene.currentLight) {
+                _instance->scene.currentLight->move(0, 0, 0.2);
+            }
+            break;
+        case 'I':
+            if(scene == 3 && _instance->scene.currentLight) {
+                _instance->scene.currentLight->move(0, 0, -0.2);
+            }
             break;
     }
-    glutPostRedisplay();
+    glutPostRedisplay(); // refresh the viewport content
 }
+
 
 void cgvInterface::specialFunc(int key, int x, int y) {
     //Teclas para mover en modo camera
-    if (interface.camera.interactiveMode) {
+    if (_instance->camera.interactiveMode) {
         switch (key) {
             case GLUT_KEY_LEFT:
-                interface.camera.orbit(-0.05);
+                _instance->camera.orbit(-0.05);
                 break;
             case GLUT_KEY_RIGHT:
-                interface.camera.orbit(0.05);
+                _instance->camera.orbit(0.05);
                 break;
             case GLUT_KEY_UP:
-                interface.camera.pitch(0.05);
+                _instance->camera.pitch(0.05);
                 break;
             case GLUT_KEY_DOWN:
-                interface.camera.pitch(-0.05);
+                _instance->camera.pitch(-0.05);
                 break;
         }
     } else {
         //Teclas para mover en modo normal
         switch (key) {
-            case GLUT_KEY_LEFT:  interface.scene.applyTranslation(1, 0, 0); break;
-            case GLUT_KEY_RIGHT: interface.scene.applyTranslation(-1, 0, 0); break;
-            case GLUT_KEY_UP:    interface.scene.applyTranslation(0, 0, 1); break;
-            case GLUT_KEY_DOWN:  interface.scene.applyTranslation(0, 0, -1); break;
+            case GLUT_KEY_LEFT:
+                if (_instance->scene.getCurrentScene() == 3 && _instance->scene.currentLight)
+                    _instance->scene.currentLight->move(-0.2, 0, 0);
+                else
+                    _instance->scene.applyTranslation(1, 0, 0);
+                break;
+
+            case GLUT_KEY_RIGHT:
+                if (_instance->scene.getCurrentScene() == 3 && _instance->scene.currentLight)
+                    _instance->scene.currentLight->move(0.2, 0, 0);
+                else
+                    _instance->scene.applyTranslation(-1, 0, 0);
+                break;
+
+            case GLUT_KEY_UP:
+                if (_instance->scene.getCurrentScene() == 3 && _instance->scene.currentLight)
+                    _instance->scene.currentLight->move(0, 0.2, 0);
+                else
+                    _instance->scene.applyTranslation(0, 0, 1);
+                break;
+
+            case GLUT_KEY_DOWN:
+                if (_instance->scene.getCurrentScene() == 3 && _instance->scene.currentLight)
+                    _instance->scene.currentLight->move(0, -0.2, 0);
+                else
+                    _instance->scene.applyTranslation(0, 0, -1);
+                break;
         }
     }
     glutPostRedisplay();
 }
+
 /**
-* Method that defines the camera and viewport. Called automatically
-* when the window is resized.
-* @param w New window width
-* @param h New window height
-* @pre All parameters are assumed to have valid values
-*/
-void cgvInterface::reshapeFunc (int w, int h)
-{ // reshape the viewport to the new window width and height
-    glViewport ( 0, 0, (GLsizei) w, (GLsizei) h );
+ * Method that defines the camera and viewport. It is called automatically
+ * when the window size is changed.
+ * @param w New window width
+ * @param h New window height
+ * @pre All parameters are assumed to have valid values
+ */
+void cgvInterface::reshapeFunc ( int w, int h )
+{  // resizes the viewport to the new window width and height
+    // save new values for the display window
+    _instance->set_window_width ( w );
+    _instance->set_window_height ( h );
 
-// save the new viewport values
-    interface.set_window_width ( w );
-    interface.set_window_height ( h );
-
-// sets the projection type to use
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-
-    glOrtho(-1*5, 1*5, -1*5, 1*5, -1*5, 200);
-
-// define the view camera
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-
-    gluLookAt(1.5, 1.0, 2.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0); // perspective view
-// gluLookAt(1.5, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0); // plan view from the positive X axis
-
-    //Practica 2
-
-    // Size the viewport to the new window width and height
-    // Save the new viewport values
-    interface.set_window_width(w);
-    interface.set_window_height(h);
-
-    // Set the camera and projection parameters
-    interface.camera.apply();
+    // sets the camera and projection parameters
+    _instance->camera.apply ();
 }
 
 void apply_local_camera(
@@ -371,7 +424,7 @@ void apply_local_camera(
                 camera.ywmin, camera.ywmax,
                 camera.znear, camera.zfar);
     }
-    else if (camera.type == CGV_FRUSTRUM) {
+    else if (camera.type == CGV_FRUSTUM) {
         glFrustum(camera.xwmin, camera.xwmax,
                   camera.ywmin, camera.ywmax,
                   camera.znear, camera.zfar);
@@ -394,201 +447,450 @@ void apply_local_camera(
               up[X], up[Y], up[Z]);
 }
 
-
 /**
-* Method for displaying the scene
-*/
+ * Method for displaying the scene
+ */
 void cgvInterface::displayFunc()
 {
+    // 1. Limpieza inicial
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    int w = interface.get_window_width();
-    int h = interface.get_window_height();
+    // Obtener dimensiones
+    int w = _instance->get_window_width();
+    int h = _instance->get_window_height();
     if (w <= 0) w = glutGet(GLUT_WINDOW_WIDTH);
     if (h <= 0) h = glutGet(GLUT_WINDOW_HEIGHT);
 
-    GLfloat light0[] = { 10.0f, 8.0f, 9.0f, 1.0f };
-    glLightfv(GL_LIGHT0, GL_POSITION, light0);
-    glEnable(GL_LIGHT0);
-
-    if (!interface.windowChange) {
-        // ---- Vista normal ----
+    // --- MODO NORMAL (1 sola vista) ---
+    if (!_instance->windowChange)
+    {
         glViewport(0, 0, w, h);
-        interface.camera.apply();
-        interface.scene.renderSceneContent(interface.menuSelection);
+        _instance->camera.apply(); // Cámara interactiva
+        _instance->scene.display();
+        glutSwapBuffers();
+        return;
     }
-    else { //TODO Pertracala infame, canallesco 😤😤
-        // ---- Vista 4 ventanas ----
-        int vw = w / 2;
-        int vh = h / 2;
 
-        // 1) Perspectiva / interactiva (arriba izquierda)
-        glViewport(0, h - vh, vw, vh);
-        interface.camera.apply();
-        interface.scene.renderSceneContent(interface.menuSelection);
+    // --- MODO 4 VISTAS ---
+    // Calculamos mitad de ancho y alto
+    int vw = w / 2;
+    int vh = h / 2;
 
-        // 2) Planta (arriba derecha)
-        glViewport(vw, h - vh, vw, vh);
-        apply_local_camera(interface.camera, vw, vh,
-                           cgvPoint3D(0.0, 5.0, 0.0),
-                           cgvPoint3D(0.0, 0.0, 0.0),
-                           cgvPoint3D(0.0, 0.0, -1.0));
-        interface.scene.renderSceneContent(interface.menuSelection);
+    // Relación de aspecto para las vistas
+    double aspect = (double)vw / (double)vh;
 
-        // 3) Alzado (abajo izquierda)
-        glViewport(0, 0, vw, vh);
-        apply_local_camera(interface.camera, vw, vh,
-                           cgvPoint3D(0.0, 0.0, 5.0),
-                           cgvPoint3D(0.0, 0.0, 0.0),
-                           cgvPoint3D(0.0, 1.0, 0.0));
-        interface.scene.renderSceneContent(interface.menuSelection);
+    // Radio de visión para la cámara ortogonal (ajústalo según el tamaño de tu escena)
+    double radio = 1.5;
 
-        // 4) Perfil (abajo derecha)
-        glViewport(vw, 0, vw, vh);
-        apply_local_camera(interface.camera, vw, vh,
-                           cgvPoint3D(5.0, 0.0, 0.0),
-                           cgvPoint3D(0.0, 0.0, 0.0),
-                           cgvPoint3D(0.0, 1.0, 0.0));
-        interface.scene.renderSceneContent(interface.menuSelection);
-    }
+    // ===== 1) SUPERIOR IZQUIERDA: CÁMARA MÓVIL (Perspectiva) =====
+    glViewport(0, vh, vw, vh);
+    _instance->camera.apply(); // Usa la cámara que mueves con el ratón
+    _instance->scene.display(); // Dibuja la escena
+
+    // ===== 2) SUPERIOR DERECHA: PLANTA (Vista desde Y) =====
+    glViewport(vw, vh, vw, vh);
+    // Usamos Ortho para vista técnica 2D
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(-radio * aspect, radio * aspect, -radio, radio, -100, 100);
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    gluLookAt(0, 20, 0,  0, 0, 0,  -1, 0, 0); // Ojo: UP vector ajustado para que no rote raro
+
+    _instance->scene.display();
+
+    // ===== 3) INFERIOR IZQUIERDA: ALZADO (Vista desde Z) =====
+    glViewport(0, 0, vw, vh);
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(-radio * aspect, radio * aspect, -radio, radio, -100, 100);
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    gluLookAt(0, 0, 20,  0, 0, 0,  0, 1, 0);
+
+    _instance->scene.display();
+
+    // ===== 4) INFERIOR DERECHA: PERFIL (Vista desde X) =====
+    glViewport(vw, 0, vw, vh);
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(-radio * aspect, radio * aspect, -radio, radio, -100, 100);
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    gluLookAt(20, 0, 0,  0, 0, 0,  0, 1, 0);
+
+    _instance->scene.display();
 
     glutSwapBuffers();
 }
 
-/**
-* Method for managing menu option selection
-* @param value New selected option
-* @pre Assumes the parameter value is correct
-* @post Stores the selected option in the object
-*/
-void cgvInterface::menuHandle (int value )
-{ _instance->menuSelection = value;
-    glutPostRedisplay (); // renew the contents of the window
+
+void cgvInterface::setPerspectiveProjection(int w, int h) {
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(60.0, (double)w / (double)h, 0.1, 200.0);
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
 }
 
 
 /**
-* Method to initialize callbacks
+* Method to animate the scene
 */
-void cgvInterface::initialize_callbacks()
-{ glutKeyboardFunc ( keyboardFunc );
-    glutSpecialFunc(specialFunc);
+void cgvInterface::idleFunc()
+{
+    // 1. Animación de MODELO (controlada por 'a'/'A')
+    _instance->scene.updateAnimation();
+
+    // 2. Animación de CÁMARA (controlada por 'g'/'G')
+    if (_instance->activationCamera) {
+        _instance->camera.updateCameraAnimation();
+    }
+
+    glutPostRedisplay();
+}
+
+/**
+* Method for handling mouse clicks
+* @param button Identifies the button that was clicked. Can be
+* GLUT_LEFT_BUTTON, GLUT_MIDDLE_BUTTON, or GLUT_RIGHT_BUTTON
+* @param state Describes whether the button was pressed (GLUT_DOWN) or released
+* (GLUT_UP)
+* @param x X coordinate of the viewport pixel where the click was made
+* @param y Y coordinate of the viewport pixel where the click was made
+* @post Updates the interface state
+*/
+void cgvInterface::mouseFunc(GLint button, GLint state, GLint x, GLint y)
+{
+    if (button == GLUT_LEFT_BUTTON)
+    {
+        if (state == GLUT_DOWN)
+        {
+            _instance->button_held = true;
+            _instance->mode = CGV_SELECT;
+            _instance->cursorX = x;
+            _instance->cursorY = y;
+
+            glClearColor(0.0, 0.0, 0.0, 0.0);
+
+            // 1. Ponemos la escena en modo selección
+            _instance->scene.setSelectionMode(true);
+
+            // 2. Dibujamos (en el back buffer)
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            _instance->scene.display();
+
+            // 3. Leemos el color
+            GLint viewport[4];
+            glGetIntegerv(GL_VIEWPORT, viewport);
+
+            //Definimos un área de picking (ej. 5x5 píxeles)
+            const int PICK_REGION_SIZE = 5;
+            // Centramos el área en el cursor
+            int region_x = x - (PICK_REGION_SIZE / 2);
+            int region_y = viewport[3] - y - (PICK_REGION_SIZE / 2);
+
+            // Creamos un buffer para todos los píxeles del área
+            GLubyte pixels[PICK_REGION_SIZE * PICK_REGION_SIZE * 3];
+
+            // Leemos el bloque de píxeles
+            glReadPixels(region_x, region_y, PICK_REGION_SIZE, PICK_REGION_SIZE, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+
+            glClearColor(1.0, 1.0, 1.0, 0.0); // Restaurar fondo blanco
+
+            // 4. "Votación" para encontrar el ID más común (que no sea 0)
+            int id_counts[256] = {0}; // Array para contar IDs (0-255)
+            int max_count = 0;
+            int selected_id = 0; // ID ganador (0 = fondo)
+
+            for (int i = 0; i < PICK_REGION_SIZE * PICK_REGION_SIZE; ++i) {
+                int id = pixels[i * 3]; // Obtenemos el canal Rojo (nuestro ID)
+                if (id != 0) { // Ignoramos el fondo
+                    id_counts[id]++;
+                    if (id_counts[id] > max_count) {
+                        max_count = id_counts[id];
+                        selected_id = id;
+                    }
+                }
+            }
+
+            // Usamos el 'selected_id' de la votación
+            std::cout << "Click X:" << x << " Y:" << y << " -> ID detectado en region: " << selected_id << std::endl;
+
+            if (selected_id == 0) _instance->selected_object = -1;
+            else _instance->selected_object = selected_id;
+
+            // 5. Volvemos a modo normal
+            _instance->scene.setSelectionMode(false);
+            _instance->scene.setObjetoSeleccionado(_instance->selected_object); // Para Escena B
+            _instance->scene.setIdToHighlight(_instance->selected_object);     // Para Escena C (Highlight)
+
+            glutPostRedisplay();
+        }
+        if (state == GLUT_UP)
+        {
+            _instance->button_held = false;
+        }
+    }
+}
+/**
+* Method for controlling mouse movement with a button pressed
+* @param x X coordinate of the mouse cursor position in the window
+* @param y Y coordinate of the mouse cursor position in the window
+* @post The interface state is updated
+*/
+void cgvInterface::motionFunc(GLint x, GLint y)
+{
+    if (!_instance->button_held || _instance->selected_object <= 0)
+        return;
+
+    int diffX = x - _instance->cursorX;
+    int diffY = _instance->cursorY - y;
+
+    int scene = _instance->scene.getCurrentScene();
+    int id = _instance->selected_object;
+
+    double sensitivity = 0.5;
+
+    if (scene == 2)
+    {
+        // Bandera (parte 3) usa diffY
+        if (id == 3)
+            _instance->scene.controlarParte(id, diffY * 0.05);
+        else
+            _instance->scene.controlarParte(id, diffX * sensitivity);
+
+        _instance->cursorX = x;
+        _instance->cursorY = y;
+        glutPostRedisplay();
+        return;
+    }
+
+    if (scene == 3)
+    {
+        switch (id)
+        {
+            case 1: // BASE
+                _instance->scene.controlarParteSceneC(1, diffX * sensitivity);
+                break;
+
+            case 2: // MÁSTIL
+                _instance->scene.controlarParteSceneC(2, diffX * sensitivity);
+                break;
+
+            case 3: // BANDERA
+                _instance->scene.controlarParteSceneC(3, diffY * sensitivity);
+                break;
+
+            case 4: // LOGO
+                _instance->scene.controlarParteSceneC(4, diffX * sensitivity);
+                break;
+        }
+
+        _instance->cursorX = x;
+        _instance->cursorY = y;
+        glutPostRedisplay();
+        return;
+    }
+}
+
+/**
+ * Method to initialise GLUT callbacks
+ */
+void cgvInterface::initialize_callbacks ()
+{  glutKeyboardFunc ( keyboardFunc );
     glutReshapeFunc ( reshapeFunc );
     glutDisplayFunc ( displayFunc );
+    glutSpecialFunc(specialFunc);
+    glutIdleFunc(idleFunc);
+    glutMouseFunc( mouseFunc );
+    glutMotionFunc(motionFunc);
 }
 
 /**
-* Method to query the display window width
-* @return The value stored as the display window width
-*/
+ * Method to query the width of the display window
+ * @return The value stored as the width of the display window
+ */
 int cgvInterface::get_window_width ()
-{ return window_width;
+{  return window_width;
 }
 
 /**
-* Method to query the height of the display window
-* @return The value stored as the height of the display window
-*/
+ * Method to query the height of the display window
+ * @return The value stored as the height of the display window
+ */
 int cgvInterface::get_window_height ()
-{ return window_height;
+{  return window_height;
 }
 
 /**
-* Method to change the width of the display window
-* @param _window_width New value for the width of the display window
-* @pre Assumes the parameter has a valid value
-* @post The window width stored in the application is changed to the new value
-*/
-void cgvInterface::set_window_width (int _window_width )
-{ window_width = _window_width;
+ * Method to change the width of the display window
+ * @param _window_width New value for the width of the display window
+ * @pre It is assumed that the parameter has a valid value
+ * @post The window width stored in the application changes to the new value
+ */
+void cgvInterface::set_window_width ( int _window_width )
+{  window_width = _window_width;
 }
 
 /**
-* Method to change the display window height
-* @param _window_height New value for the display window height
-* @pre Assumes the parameter has a valid value
-* @post The window height stored in the application is changed to the new value
-*/
-void cgvInterface::set_window_height (int _window_height )
-{ window_height = _window_height;
+ * Method to change the height of the display window
+ * @param _window_height New value for the height of the display window
+ * @pre It is assumed that the parameter has a valid value
+ * @post The window height stored in the application changes to the new value
+ */
+void cgvInterface::set_window_height ( int _window_height )
+{  window_height = _window_height;
 }
 
-void cgvInterface::createWorld(void) {
-    // crear camaras
-    p0 = cgvPoint3D(3.0, 2.0, 4);
-    r = cgvPoint3D(0, 0, 0);
-    V = cgvPoint3D(0, 1.0, 0);
 
-    interface.camera.set(CGV_PARALLEL, p0, r, V,
-                         -1 * 3, 1 * 3, -1 * 3, 1 * 3, 1, 200);
+void cgvInterface::create_menu() {
+    if(_instance->scene.getCurrentScene() == 3) {
+        int texturesMenu = glutCreateMenu(menuHandle);
+        glutAddMenuEntry("Textures 1", 41);
+        glutAddMenuEntry("Textures 2", 42);
+        glutAddMenuEntry("Textures 3", 43);
+        glutAddMenuEntry("No texture", 44);
 
-    //perspective parameters
-    interface.camera.angle = 60.0;
-    interface.camera.aspect = 1.0;
+        int materialsMenu = glutCreateMenu(menuHandle);
+        glutAddMenuEntry("Material 1", 51);
+        glutAddMenuEntry("Material 2", 52);
+        glutAddMenuEntry("Material 3", 53);
+
+        int filteringMenu = glutCreateMenu(menuHandle);
+        glutAddMenuEntry("MAG: GL_NEAREST", 61);
+        glutAddMenuEntry("MAG: GL_LINEAR", 62);
+        glutAddMenuEntry("MIN: GL_NEAREST", 63);
+        glutAddMenuEntry("MIN: GL_LINEAR", 64);
+
+        int lightningMenu = glutCreateMenu(menuHandle);
+        glutAddMenuEntry("Spotlight", 71);
+        glutAddMenuEntry("Directional Light", 72);
+        glutAddMenuEntry("Beam Light", 73);
+        glutAddMenuEntry("Turn Off the Light", 74);
+
+        int menu_id = glutCreateMenu(menuHandle);
+        glutAddMenuEntry("Escena A", 1);
+        glutAddMenuEntry("Escena B", 2);
+        glutAddMenuEntry("Escena C", 3);
+
+        glutAddSubMenu("Textures", texturesMenu);
+        glutAddSubMenu("Materials", materialsMenu);
+        glutAddSubMenu("Texture Filtering", filteringMenu);
+        glutAddSubMenu("Lightning", lightningMenu);
+
+        glutAttachMenu(GLUT_RIGHT_BUTTON);
+    }else{
+        int menu_id = glutCreateMenu(menuHandle);
+        glutAddMenuEntry("Escena A", 1);
+        glutAddMenuEntry("Escena B", 2);
+        glutAddMenuEntry("Escena C", 3);
+
+        glutAttachMenu(GLUT_RIGHT_BUTTON);
+    }
 }
 
-//TODO arreglao
-void cgvInterface::updateCamera(int pos) {
-    //Que este solo de 0 a 3
-    int p = pos % 4;
-    if (p < 0) p += 4;
+//FIXME falta añadir las luces
+void cgvInterface::menuHandle(int value)
+{
+    switch (value)
+    {
+        case 1:
+            std::cout << "Menu option 1 selected\n"; //Log pq no me carga
+            _instance->scene.renderSceneA();
+            _instance->create_menu();
+            break;
+        case 2:
+            std::cout << "Menu option 2 selected\n"; //Log pq no me carga
+            _instance->scene.renderSceneB();
+            _instance->create_menu();
+            break;
+        case 3:
+            std::cout << "Menu option 3 selected\n"; //Log pq no me carga
+            _instance->scene.renderSceneC();
+            _instance->create_menu();
+            break;
+        case 41:
+            _instance->scene.setTexture(new cgvTexture((char *) "../chess.png")); // Only load it once
+            glEnable(GL_TEXTURE_2D);
+            _instance->scene.getTexture()->apply();
+            break;
+        case 42:
+            _instance->scene.setTexture(new cgvTexture((char *) "../mushroom.png")); // Only load it once
+            glEnable(GL_TEXTURE_2D);
+            _instance->scene.getTexture()->apply();
+            break;
+        case 43:
+            _instance->scene.setTexture(new cgvTexture((char *) "../wood.png")); // Only load it once
+            glEnable(GL_TEXTURE_2D);
+            _instance->scene.getTexture()->apply();
+            break;
+        case 44:
+            _instance->scene.setTexture(nullptr);
+            break;
+        case 51:
+            _instance->scene.setCurrentMaterial(1);
+            break;
+        case 52:
+            _instance->scene.setCurrentMaterial(2);
+            break;
+        case 53:
+            _instance->scene.setCurrentMaterial(3);
+            break;
 
-    cgvPoint3D eye, center(0,0,0), up;
+        //En caso de que haya una textura activa se pueden utilizar los filtros
+        case 61:
+            if(_instance->scene.getTexture() != nullptr){
+                _instance->scene.currentMagFilter = GL_NEAREST;
+            }
+            break;
+        case 62:
+            if(_instance->scene.getTexture() != nullptr){
+                _instance->scene.currentMagFilter = GL_LINEAR;
+            }
+            break;
+        case 63:
+            if(_instance->scene.getTexture() != nullptr){
+                _instance->scene.currentMinFilter = GL_NEAREST;
+            }
+            break;
+        case 64:
+            if(_instance->scene.getTexture() != nullptr){
+                _instance->scene.currentMinFilter = GL_LINEAR;
+            }
+            break;
+            //Apagamos la luz actual y colocamos la nueva
+        case 71:
+            if(_instance->scene.currentLight) {
+                _instance->scene.currentLight->shutdown();
+            }
+            _instance->scene.currentLight = _instance->scene.getSpotlight();
+            _instance->scene.currentLight->turnon();
+            break;
 
-    // Definición de las 4 vistas:
-    // 0 = vista "original" (usamos p0,r,V ya definidos en createWorld)
-    // 1 = planta (desde +Y)
-    // 2 = perfil (desde +X)
-    // 3 = alzado (desde +Z)
-    switch (p) {
-        case 0:
-            //Definicion original de la camara otra vez para que no aparezca en blanco un plano
-            p0 = cgvPoint3D(3.0, 2.0, 4);
-            r = cgvPoint3D(0, 0, 0);
-            V = cgvPoint3D(0, 1.0, 0);
-            eye = p0;        // conserva la posición original
-            center = r;
-            up = V;
+        case 72:
+            if(_instance->scene.currentLight) {
+                _instance->scene.currentLight->shutdown();
+            }
+            _instance->scene.currentLight = _instance->scene.getDirectional();
+            _instance->scene.currentLight->turnon();
             break;
-        case 1: // planta (desde arriba)
-            eye = cgvPoint3D(0.0, 5.0, 0.0);
-            center = cgvPoint3D(0.0, 0.0, 0.0);
-            // up hacia -Z para que la planta "mire" con X a la derecha
-            up = cgvPoint3D(0.0, 0.0, -1.0);
+
+        case 73:
+            if(_instance->scene.currentLight) {
+                _instance->scene.currentLight->shutdown();
+            }
+            _instance->scene.currentLight = _instance->scene.getBeam();
+            _instance->scene.currentLight->turnon();
             break;
-        case 2: // perfil (desde +X)
-            eye = cgvPoint3D(5.0, 0.0, 0.0);
-            center = cgvPoint3D(0.0, 0.0, 0.0);
-            up = cgvPoint3D(0.0, 1.0, 0.0);
-            break;
-        case 3: // alzado (desde +Z)
-            eye = cgvPoint3D(0.0, 0.0, 5.0);
-            center = cgvPoint3D(0.0, 0.0, 0.0);
-            up = cgvPoint3D(0.0, 1.0, 0.0);
+        case 74:
+            _instance->scene.currentLight->shutdown();
             break;
     }
-
-    // Aplicamos sin cambiar innecesariamente parámetros de proyección:
-    if (interface.camera.type == CGV_PARALLEL || interface.camera.type == CGV_FRUSTRUM) {
-        // mantenemos xwmin/xwmax/ywmin/ywmax/znear/zfar
-        interface.camera.set(
-                interface.camera.type,
-                eye, center, up,
-                interface.camera.xwmin, interface.camera.xwmax,
-                interface.camera.ywmin, interface.camera.ywmax,
-                interface.camera.znear, interface.camera.zfar
-        );
-    } else { // CGV_PERSPECTIVE
-        // preservamos angle, aspect, znear, zfar
-        double aspect = interface.camera.aspect;
-        interface.camera.set(
-                CGV_PERSPECTIVE,
-                eye, center, up,
-                interface.camera.angle, aspect,
-                interface.camera.znear, interface.camera.zfar
-        );
-    }
-
-    // aplicamos la cámara resultante (actualiza matrices)
-    interface.camera.apply();
 }

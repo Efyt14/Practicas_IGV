@@ -2,82 +2,105 @@
 #define __IGVINTERFAZ
 
 #if defined(__APPLE__) && defined(__MACH__)
-
 #include <GLUT/glut.h>
 #include <OpenGL/gl.h>
 #include <OpenGL/glu.h>
-
 #else
+
 #include <GL/glut.h>
+
 #endif   // defined(__APPLE__) && defined(__MACH__)
 
 #include <string>
+
 #include "cgvScene3D.h"
 #include "cgvCamera.h"
 
 
 /**
-* Objects of this class encapsulate the interface and state of the application.
+* Interface operating modes
 */
+enum interfaceMode
+{ CGV_VIEW ///< The scene will be displayed normally in the window
+    , CGV_SELECT /**< The display window has been clicked, and the
+* scene should be displayed in selection mode
+*/
+};
+
+
+/**
+ * Objects of this class encapsulate the interface and state of the application.
+ */
 class cgvInterface
-{ private:
+{  private:
     // Attributes
     int window_width = 0; ///< Width of the display window
-    int window_height = 0; ///< Height of the display window
-    int pos;
+    int window_height = 0;  ///< Height of the display window
+
+    cgvScene3D scene; ///< Scene displayed in the window defined by cgvInterface
+    cgvCamera camera; ///< Camera used to display the scene
+
+
+    interfaceMode mode = CGV_VIEW; ///< Scene display mode
+    int cursorX = 0; /**< X coordinate. Screen pixel over which the mouse is positioned, for clicking or dragging*/
+    int cursorY = 0; /**< Y coordinate. Screen pixel over which the mouse is positioned, to click or drag.*/
+
+    int selected_object = -1; ///< Identifier of the selected object, -1 if none exists.
+    bool button_held = false; ///< Indicates whether the button is pressed (true) or released (false).
+    bool activationCamera = false;
     bool windowChange;
 
-    cgvScene3D scene; ///< Scene to display in the window defined by cgvInterface
-    cgvCamera camera; // camera used to display the scene
 
-    int menuSelection = 0; ///< Last selected menu item
+    // Application of the Singleton design pattern
+    static cgvInterface* _instance; ///< Memory address of the single object of the class
+    /// Default constructor
+    cgvInterface () = default;
 
-    // Panoramic view values
-    cgvPoint3D p0, r, V;
-
-
-    // Implementing the Singleton pattern
-    static cgvInterface* _instance; ///< Pointer to the singleton object of the class
 
 public:
-    static cgvInterface& getInstance();
-    cgvInterface();
+    // Application of the Singleton design pattern
+    static cgvInterface& getInstance ();
+    // Default constructors and destructor
 
-    /// Destroyer
-    ~cgvInterface() = default;
+    /// Destructor
+    ~cgvInterface () = default;
+
     // Static methods
     // Event callbacks
-    static void keyboardFunc ( unsigned char key, int x, int y ); // Method for handling keyboard events
+    // Event callbacks
+    static void keyboardFunc ( unsigned char key, int x, int y ); // Method for controlling keyboard events
     static void reshapeFunc ( int w, int h ); // Method that defines the camera and viewport
-    // Automatically called when the window is resized
-    static void displayFunc (); // Method for displaying the scene
-    static void menuHandle(int value); // method to manage menu option selection
+    // called automatically when the window size is changed
+    static void displayFunc (); // method for displaying the scene
+    static void idleFunc (); // method to animate the scene
+
+    static void mouseFunc ( GLint button, GLint state, GLint x, GLint y ); // mouse click control
+    static void motionFunc ( GLint x, GLint y ); // mouse movement control with the button pressed
 
     // Methods
-    // initializes all parameters to create a display window
-    void configure_environment ( int argc, char** argv // main parameters
+    // creates the world displayed in the window
+    void create_world ();
+
+    // initialise all parameters to create a display window
+    void configure_environment ( int argc, char **argv // main parameters
             , int _window_width, int _window_height // width and height of the display window
             , int _pos_X, int _pos_Y // initial position of the display window
             , std::string _title // title of the display window
     );
-    void create_menu(); // Creates a menu that is handled with the right mouse button.
+    void initialize_callbacks (); // initialise all callbacks
+    void start_display_loop (); // display the scene and wait for events on the interface
 
-    void initialize_callbacks(); // Initializes all callbacks
+    // get_ and set_ methods for accessing attributes
+    int get_window_width ();
+    int get_window_height ();
+    void set_window_width ( int _window_width );
+    void set_window_height ( int _window_height );
 
-    void start_display_loop(); // Displays the scene and waits for events on the interface
-
-    // Get_ and set_ methods for accessing attributes
-    int get_window_width();
-    int get_window_height();
-
-    void set_window_width(int _window_width);
-    void set_window_height(int _window_height);
+    //Para la creacion del menu, que cada apartado esté en una escena
+    void create_menu();
+    static void menuHandle(int value);
 
     static void specialFunc(int key, int x, int y);
-
-    void createWorld(void);
-
-    void updateCamera(int pos);
+    static void setPerspectiveProjection(int w, int h);
 };
-
-#endif   // __IGVINTERFAZ
+#endif   // __CGVINTERFACE
