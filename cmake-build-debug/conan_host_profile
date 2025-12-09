@@ -8,4 +8,4 @@ compiler.libcxx=libstdc++11
 build_type=Debug
 [conf]
 tools.cmake.cmaketoolchain:generator=Ninja
-tools.build:compiler_executables={"c":"C:/Users/admin/AppData/Local/Programs/CLion/bin/mingw/bin/gcc.exe","cpp":"C:/Users/admin/AppData/Local/Programs/CLion/bin/mingw/bin/g++.exe","rc":"C:/Users/admin/AppData/Local/Programs/CLion/bin/mingw/bin/windres.exe"}
+tools.build:compiler_executables={"c":"C:/Program Files/JetBrains/CLion 2023.2.1/bin/mingw/bin/gcc.exe","cpp":"C:/Program Files/JetBrains/CLion 2023.2.1/bin/mingw/bin/g++.exe","rc":"C:/Program Files/JetBrains/CLion 2023.2.1/bin/mingw/bin/windres.exe"}

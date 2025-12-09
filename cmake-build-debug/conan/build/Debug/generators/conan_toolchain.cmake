@@ -23,9 +23,9 @@ endif()
 
 ########## 'compilers' block #############
 
-set(CMAKE_C_COMPILER "C:/Users/admin/AppData/Local/Programs/CLion/bin/mingw/bin/gcc.exe")
-set(CMAKE_CXX_COMPILER "C:/Users/admin/AppData/Local/Programs/CLion/bin/mingw/bin/g++.exe")
-set(CMAKE_RC_COMPILER "C:/Users/admin/AppData/Local/Programs/CLion/bin/mingw/bin/windres.exe")
+set(CMAKE_C_COMPILER "C:/Program Files/JetBrains/CLion 2023.2.1/bin/mingw/bin/gcc.exe")
+set(CMAKE_CXX_COMPILER "C:/Program Files/JetBrains/CLion 2023.2.1/bin/mingw/bin/g++.exe")
+set(CMAKE_RC_COMPILER "C:/Program Files/JetBrains/CLion 2023.2.1/bin/mingw/bin/windres.exe")
 
 
 ########## 'arch_flags' block #############
@@ -141,9 +141,9 @@ list(PREPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR})
 # Definition of CMAKE_PREFIX_PATH, CMAKE_XXXXX_PATH
 # The Conan local "generators" folder, where this toolchain is saved.
 list(PREPEND CMAKE_PREFIX_PATH ${CMAKE_CURRENT_LIST_DIR} )
-list(PREPEND CMAKE_LIBRARY_PATH "C:/Users/admin/.conan2/p/b/freegd3585a763c20a/p/lib")
-list(PREPEND CMAKE_INCLUDE_PATH "C:/Users/admin/.conan2/p/openg599e77efdc939/p/include" "C:/Users/admin/.conan2/p/khrpl54278e0c9b4ae/p/include" "C:/Users/admin/.conan2/p/b/freegd3585a763c20a/p/include")
-set(CONAN_RUNTIME_LIB_DIRS "C:/Users/admin/.conan2/p/b/freegd3585a763c20a/p/bin" )
+list(PREPEND CMAKE_LIBRARY_PATH "C:/Users/usuariopc/.conan2/p/b/freegfc928704ec759/p/lib")
+list(PREPEND CMAKE_INCLUDE_PATH "C:/Users/usuariopc/.conan2/p/openg599e77efdc939/p/include" "C:/Users/usuariopc/.conan2/p/khrpl54278e0c9b4ae/p/include" "C:/Users/usuariopc/.conan2/p/b/freegfc928704ec759/p/include")
+set(CONAN_RUNTIME_LIB_DIRS "C:/Users/usuariopc/.conan2/p/b/freegfc928704ec759/p/bin" )
 
 endif()
 

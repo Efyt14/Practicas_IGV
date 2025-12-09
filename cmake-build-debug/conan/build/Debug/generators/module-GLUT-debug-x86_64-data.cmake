@@ -14,7 +14,7 @@ set(opengl_system_FIND_MODE "NO_MODULE")
 
 ########### VARIABLES #######################################################################
 #############################################################################################
-set(freeglut_PACKAGE_FOLDER_DEBUG "C:/Users/admin/.conan2/p/b/freegd3585a763c20a/p")
+set(freeglut_PACKAGE_FOLDER_DEBUG "C:/Users/usuariopc/.conan2/p/b/freegfc928704ec759/p")
 set(freeglut_BUILD_MODULES_PATHS_DEBUG )
 
 
