@@ -22,6 +22,5 @@ int main ( int argc, char **argv )
    cgvInterface::getInstance().start_display_loop();
 
 
-
    return ( 0 );
 }

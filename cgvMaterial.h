@@ -13,7 +13,7 @@
 
 #include "cgvColor.h"
 /**
-* Objects of this class represent material properties
+* Objects of this class represent material1 properties
 */
 class cgvMaterial
 {

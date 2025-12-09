@@ -24,7 +24,7 @@ cgvMaterial::cgvMaterial ( cgvColor _Ka, cgvColor _Kd, cgvColor _Ks, double _Ns 
 // Public Methods
 
 /**
-* Method to apply material properties by calling OpenGL functions
+* Method to apply material1 properties by calling OpenGL functions
 */
 void cgvMaterial::apply ()
 {
@@ -52,13 +52,13 @@ void cgvMaterial::apply ()
 }
 
 /**
-* Changes material properties
+* Changes material1 properties
 * @param _Ka Value for the ambient reflection coefficient
 * @param _Kd Value for the diffuse reflection coefficient
 * @param _Ks Value for the specular reflection coefficient
 * @param _Ns Value for the Phong exponent
 * @pre Assumes parameters have valid values
-* @post The material properties change
+* @post The material1 properties change
 */
 void cgvMaterial::set ( cgvColor _Ka, cgvColor _Kd, cgvColor _Ks, double _Ns )
 {  Ka = _Ka;

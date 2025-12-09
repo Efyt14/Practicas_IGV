@@ -44,9 +44,10 @@ cgvScene3D::cgvScene3D () {  //Section B: Insert code to create a cylinder
     }
 
     //Practica 3
+    //Positional Light --> Ambient
     lightbulb = new cgvLightSource(
             GL_LIGHT0,
-            cgvPoint3D(1, 1, 1),
+            cgvPoint3D(0.5,1,0.5),
             cgvColor(0, 0, 0, 1),
             cgvColor(1, 1, 1, 1),
             cgvColor(1, 1, 1, 1),
@@ -54,9 +55,10 @@ cgvScene3D::cgvScene3D () {  //Section B: Insert code to create a cylinder
     );
     lightbulb->turnon();
 
+    //Spotlight
     spotlight = new cgvLightSource(
             GL_LIGHT1,
-            cgvPoint3D(3, 1, 1),
+            cgvPoint3D(0,0.3,0),
             cgvColor(0, 0, 0, 1),
             cgvColor(1, 1, 1, 1),
             cgvColor(1, 1, 1, 1),
@@ -67,13 +69,68 @@ cgvScene3D::cgvScene3D () {  //Section B: Insert code to create a cylinder
     );
     spotlight->turnon();
 
-    material = new cgvMaterial(
-            cgvColor(0.15, 0, 0),
-            cgvColor(0.5, 0, 0),
-            cgvColor(0.5, 0, 0),
-            120
+    //Directional Light
+    directional = new cgvLightSource(
+            GL_LIGHT2,
+            cgvPoint3D(0.0, 1.0, 1.0), // dirección --> inf
+            cgvColor(0.2, 0.2, 0.2, 1),
+            cgvColor(0.8, 0.8, 0.8, 1),
+            cgvColor(1.0, 1.0, 1.0, 1),
+            1,0,0,
+            cgvPoint3D(0,-1,-1),
+            180,
+            0
+            );
+    directional->turnon();
+
+    //Beam Light
+    beam = new cgvLightSource(
+            GL_LIGHT3,
+            cgvPoint3D(0, 1, 0),
+            cgvColor(0,0,0,1),
+            cgvColor(1,1,1,1),
+            cgvColor(1,1,1,1),
+            1,0,0,
+            cgvPoint3D(0, -1, 0),
+            15,                    // angulo estrecho → "beam"
+            0
     );
+    beam->turnon();
+
+
+    // MATERIAL 1: Madera
+    material1 = new cgvMaterial(
+            cgvColor(0.2, 0.1, 0.05),   // ambiente
+            cgvColor(0.4, 0.2, 0.1),    // difuso
+            cgvColor(0.1, 0.05, 0.02),  // especular
+            30                          // phong
+    );
+
+    // MATERIAL 2: Champiñón del Mario Kart
+    material2 = new cgvMaterial(
+            cgvColor(0.4, 0.0, 0.0),
+            cgvColor(0.9, 0.1, 0.1),      // difuso rojito
+            cgvColor(1.0, 1.0, 1.0),      // brillo blanco
+            100                           // phong alto
+    );
+
+    // MATERIAL 3: Mármol
+    material3 = new cgvMaterial(
+            cgvColor(0.25, 0.25, 0.25),
+            cgvColor(0.6, 0.6, 0.6),
+            cgvColor(0.9, 0.9, 0.9),
+            200
+    );
+
+    defaultAmbient[0]  = 0.2f; defaultAmbient[1] = 0.2f; defaultAmbient[2] = 0.2f; defaultAmbient[3] = 1.0f;
+    defaultDiffuse[0]  = 0.8f; defaultDiffuse[1] = 0.8f; defaultDiffuse[2] = 0.8f; defaultDiffuse[3] = 1.0f;
+    defaultSpecular[0] = 0.0f; defaultSpecular[1] = 0.0f; defaultSpecular[2] = 0.0f; defaultSpecular[3] = 1.0f;
+    defaultPhong       = 10.0f;
+
+    // material por defecto
+    currentMaterial = material1;
     texture = nullptr;
+    currentLight = spotlight;
 }
 
 /**
@@ -84,8 +141,9 @@ cgvScene3D::~cgvScene3D ()
     //Practica 3
     delete lightbulb;
     delete spotlight;
-    delete material;
-    delete texture;
+    delete beam;
+    delete directional;
+    delete material1, delete material2, delete material3;
 }
 
 //Practica 3
@@ -108,10 +166,10 @@ void cgvScene3D::paint_quad() {
 }
 
 void cgvScene3D::paint_quad(float div_x, float div_z) {
-    float ini_x = -1.0;
-    float ini_z = -1.0;
-    float tam_x = 2.0;
-    float tam_z = 2.0;
+    float ini_x = -1.5;
+    float ini_z = -1.5;
+    float tam_x = 5.0;
+    float tam_z = 5.0;
 
     float longX = tam_x / div_x;
     float longZ = tam_z / div_z;
@@ -412,7 +470,7 @@ void cgvScene3D::display( void )
         glDisable(GL_TEXTURE_2D);
         glBindTexture(GL_TEXTURE_2D, 0);
 
-        //Restaurar material neutro
+        //Restaurar material1 neutro
         GLfloat defaultAmbient[4] = {0.2f, 0.2f, 0.2f, 1.0f};
         GLfloat defaultDiffuse[4] = {0.8f, 0.8f, 0.8f, 1.0f};
         GLfloat defaultSpecular[4] = {0.0f, 0.0f, 0.0f, 1.0f};
@@ -497,26 +555,41 @@ void cgvScene3D::display( void )
             glPopMatrix(); // fin escala global
             break;
         }
-
         case 3: // Escena C (Picking + Monedas)
         {
 
-            //Practica 3
-            // Lights are applied before scene transformations so they remain fixed
-            // TODO: SECTION A: Define and apply the point light specified in the practice script
+            //Vamos a dejar la luz ambiente por defecto creada y mantenida
             lightbulb->apply(); // Create the lights, materials, and texture in the constructor so they are not generated with each window update
 
-            /* TODO: SECTION E: Define and apply the spotlight type specified in the practice script*/
-            spotlight->apply();
+            if (currentLight)
+                currentLight->apply();
 
-            /* TODO: Section B: Define and apply the material properties indicated in the practice script */
-            material->apply();
+            if(currentMaterial){
+                currentMaterial->apply();
+            }
 
-            /* TODO: Section D: Replace the values corresponding to the R component of the diffuse coefficient,
-            the R component of the specular coefficient, and the Phong exponent, with the value
-            of the corresponding attribute of the igvScene class */
+            if (texture != nullptr) {
+                glEnable(GL_TEXTURE_2D);
+                texture->apply();
+
+                //Para los filtros de texturas --> Asi se aplican los actuales, se actualizan y se pueden modificar
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, currentMinFilter);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, currentMagFilter);
+            } else {
+                glDisable(GL_TEXTURE_2D);
+            }
 
             paint_quad(50, 50);
+
+            // DESACTIVAR TEXTURA PARA QUE NO SE APLIQUE A OTROS OBJETOS
+            glDisable(GL_TEXTURE_2D);
+            glBindTexture(GL_TEXTURE_2D, 0);
+
+            // RESTAURAR MATERIAL PARA QUE NO SE APLIQUE A OTROS OBJETOS
+            glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,  defaultAmbient);
+            glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,  defaultDiffuse);
+            glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, defaultSpecular);
+            glMaterialf (GL_FRONT_AND_BACK, GL_SHININESS, defaultPhong);
 
             glPushMatrix();
 
@@ -1090,4 +1163,12 @@ cgvTexture *cgvScene3D::getTexture() const {
 
 void cgvScene3D::setTexture(cgvTexture *texture) {
     cgvScene3D::texture = texture;
+}
+
+void cgvScene3D::setCurrentMaterial(int id)  {
+    switch (id) {
+        case 1: currentMaterial = material1; break;
+        case 2: currentMaterial = material2; break;
+        case 3: currentMaterial = material3; break;
+    }
 }

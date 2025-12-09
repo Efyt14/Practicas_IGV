@@ -326,13 +326,13 @@ void cgvInterface::keyboardFunc(unsigned char key, int x, int y)
             }
             break;
         case 'i':
-            if(scene == 3) {
-                _instance->scene.getSpotlight()->move(0, 0, 0.2);
+            if(scene == 3 && _instance->scene.currentLight) {
+                _instance->scene.currentLight->move(0, 0, 0.2);
             }
             break;
         case 'I':
-            if(scene == 3) {
-                _instance->scene.getSpotlight()->move(0, 0, -0.2);
+            if(scene == 3 && _instance->scene.currentLight) {
+                _instance->scene.currentLight->move(0, 0, -0.2);
             }
             break;
     }
@@ -361,26 +361,32 @@ void cgvInterface::specialFunc(int key, int x, int y) {
         //Teclas para mover en modo normal
         switch (key) {
             case GLUT_KEY_LEFT:
-                if (_instance->scene.getCurrentScene() == 3) {
-                    _instance->scene.getSpotlight()->move(-0.2, 0, 0);
-                }else
+                if (_instance->scene.getCurrentScene() == 3 && _instance->scene.currentLight)
+                    _instance->scene.currentLight->move(-0.2, 0, 0);
+                else
                     _instance->scene.applyTranslation(1, 0, 0);
                 break;
+
             case GLUT_KEY_RIGHT:
-                if (_instance->scene.getCurrentScene() == 3) {
-                    _instance->scene.getSpotlight()->move(0.2, 0, 0);
-                }else
-                    _instance->scene.applyTranslation(-1, 0, 0); break;
+                if (_instance->scene.getCurrentScene() == 3 && _instance->scene.currentLight)
+                    _instance->scene.currentLight->move(0.2, 0, 0);
+                else
+                    _instance->scene.applyTranslation(-1, 0, 0);
+                break;
+
             case GLUT_KEY_UP:
-                if (_instance->scene.getCurrentScene() == 3) {
-                    _instance->scene.getSpotlight()->move(0, 0.2, 0);
-                }else
-                    _instance->scene.applyTranslation(0, 0, 1); break;
+                if (_instance->scene.getCurrentScene() == 3 && _instance->scene.currentLight)
+                    _instance->scene.currentLight->move(0, 0.2, 0);
+                else
+                    _instance->scene.applyTranslation(0, 0, 1);
+                break;
+
             case GLUT_KEY_DOWN:
-                if (_instance->scene.getCurrentScene() == 3) {
-                    _instance->scene.getSpotlight()->move(0, -0.2, 0);
-                }else
-                    _instance->scene.applyTranslation(0, 0, -1); break;
+                if (_instance->scene.getCurrentScene() == 3 && _instance->scene.currentLight)
+                    _instance->scene.currentLight->move(0, -0.2, 0);
+                else
+                    _instance->scene.applyTranslation(0, 0, -1);
+                break;
         }
     }
     glutPostRedisplay();
@@ -767,6 +773,7 @@ void cgvInterface::create_menu() {
         glutAddMenuEntry("Spotlight", 71);
         glutAddMenuEntry("Directional Light", 72);
         glutAddMenuEntry("Beam Light", 73);
+        glutAddMenuEntry("Turn Off the Light", 74);
 
         int menu_id = glutCreateMenu(menuHandle);
         glutAddMenuEntry("Escena A", 1);
@@ -789,7 +796,7 @@ void cgvInterface::create_menu() {
     }
 }
 
-//FIXME falta añadir todos los filtros y todos los materiales y todas las luces
+//FIXME falta añadir las luces
 void cgvInterface::menuHandle(int value)
 {
     switch (value)
@@ -825,7 +832,65 @@ void cgvInterface::menuHandle(int value)
             _instance->scene.getTexture()->apply();
             break;
         case 44:
-            glDisable(GL_TEXTURE_2D);
+            _instance->scene.setTexture(nullptr);
+            break;
+        case 51:
+            _instance->scene.setCurrentMaterial(1);
+            break;
+        case 52:
+            _instance->scene.setCurrentMaterial(2);
+            break;
+        case 53:
+            _instance->scene.setCurrentMaterial(3);
+            break;
+
+        //En caso de que haya una textura activa se pueden utilizar los filtros
+        case 61:
+            if(_instance->scene.getTexture() != nullptr){
+                _instance->scene.currentMagFilter = GL_NEAREST;
+            }
+            break;
+        case 62:
+            if(_instance->scene.getTexture() != nullptr){
+                _instance->scene.currentMagFilter = GL_LINEAR;
+            }
+            break;
+        case 63:
+            if(_instance->scene.getTexture() != nullptr){
+                _instance->scene.currentMinFilter = GL_NEAREST;
+            }
+            break;
+        case 64:
+            if(_instance->scene.getTexture() != nullptr){
+                _instance->scene.currentMinFilter = GL_LINEAR;
+            }
+            break;
+            //Apagamos la luz actual y colocamos la nueva
+        case 71:
+            if(_instance->scene.currentLight) {
+                _instance->scene.currentLight->shutdown();
+            }
+            _instance->scene.currentLight = _instance->scene.getSpotlight();
+            _instance->scene.currentLight->turnon();
+            break;
+
+        case 72:
+            if(_instance->scene.currentLight) {
+                _instance->scene.currentLight->shutdown();
+            }
+            _instance->scene.currentLight = _instance->scene.getDirectional();
+            _instance->scene.currentLight->turnon();
+            break;
+
+        case 73:
+            if(_instance->scene.currentLight) {
+                _instance->scene.currentLight->shutdown();
+            }
+            _instance->scene.currentLight = _instance->scene.getBeam();
+            _instance->scene.currentLight->turnon();
+            break;
+        case 74:
+            _instance->scene.currentLight->shutdown();
             break;
     }
 }

@@ -174,18 +174,18 @@ void cgvLightSource::getAttenuation ( double &a0, double &a1, double &a2 )
 * Changes the light's state to on
 * @post The light is now on
 */
-void cgvLightSource::turnon ()
-{
+void cgvLightSource::turnon() {
     on = true;
+    glEnable(idLuz);
 }
 
 /**
 * Changes the light's state to off
 * @post The light is now off
 */
-void cgvLightSource::shutdown ()
-{
+void cgvLightSource::shutdown() {
     on = false;
+    glDisable(idLuz);
 }
 
 /**
@@ -207,7 +207,19 @@ void cgvLightSource::apply () {
 
     if (on) {
         // activate the light
-            glEnable(idLuz);
+        glEnable(idLuz);
+
+        //Arreglo mio porque la direccional quemaba la escena
+        float pos[4] = {
+                (float)position[0],
+                (float)position[1],
+                (float)position[2],
+                1.0f // por defecto es puntual
+        };
+
+        if(spotlight_angle == 180){
+            pos[3] = 0.0f; //directional light
+        }
 
         // set the light's position
         glLightfv(idLuz, GL_POSITION, position.cloneToFloatArray());

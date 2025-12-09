@@ -43,9 +43,19 @@ private:
     int currentScene;
 
     //Practica 3
-    cgvLightSource *lightbulb, *spotlight, *ambient, *diffuse;
-    cgvMaterial *material;
+    cgvLightSource *lightbulb, *spotlight, *ambient, *directional, *beam;
+    cgvMaterial *material1, *material2, *material3;
+    cgvMaterial *currentMaterial;
     cgvTexture *texture;
+
+    // Valores de material por defecto
+    GLfloat defaultAmbient[4];
+    GLfloat defaultDiffuse[4];
+    GLfloat defaultSpecular[4];
+    GLfloat defaultPhong;
+
+
+
 
     // Section A: Add attributes with rotation angles in X, Y, and Z here.
     double rotX, rotY, rotZ = 0.0;
@@ -82,6 +92,18 @@ public:
     std::string currentSceneName;
     Transform transforms[3];   // un transform por cada objeto
     int selected = 0;          // // 0=A(sc2), 1=B(sc2), 2=Escena3
+
+
+    //Para los filtros de textura
+    int currentMagFilter = GL_LINEAR;
+    int currentMinFilter = GL_LINEAR;
+
+    //Booleanos para elegir por menú que luz poner
+    bool useDirectional = true;
+    bool useSpotlight = true;
+    bool useBeam = true;
+    cgvLightSource *currentLight;
+
 
     void renderSceneA(); // Cilindro
     void renderSceneB(); // Grafos de Escena
@@ -166,17 +188,21 @@ public:
 
     //Practica 3
     cgvLightSource *getSpotlight() { return spotlight;}
-    cgvMaterial *getMaterial() { return material;}
+    cgvLightSource *getDirectional() {return directional;}
+    cgvLightSource *getBeam() {return beam;}
+    cgvMaterial *getMaterial() { return currentMaterial;}
 
     cgvTexture *getTexture() const;
 
     void setTexture(cgvTexture *texture);
+    void setCurrentMaterial(int id);
+
 
 private:
     void paint_axes ();
     void drawWooper();
     void drawLogo(float lenght);
-    // Helper para configurar el material o el color de selección
+    // Helper para configurar el material1 o el color de selección
     void applyColorMaterial(int id, float r, float g, float b);
     void drawCoin(Coin& c); // Método para dibujar una moneda
 
